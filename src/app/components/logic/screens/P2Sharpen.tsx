@@ -40,7 +40,7 @@ export function P2SharpenScreen({
               <div className="mb-4 p-4 rounded-lg border border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-amber-500/5">
                 <h3 className="text-[13px] font-medium mb-2 text-amber-400">We think you mean…</h3>
                 <p className="text-[12px] text-[#c0c0c8] mb-3">
-                  A quality or behavior of organisms that are active primarily during nighttime hours.
+                  [YourConcept] in the sense of a generic category.
                 </p>
                 <div className="flex gap-2">
                   <button
@@ -67,7 +67,7 @@ export function P2SharpenScreen({
 
                 {senseChoice === "no" && (
                   <div className="mt-4 space-y-2">
-                    {["Related to night-time activities or events", "A musical or artistic piece meant to evoke nighttime", "None of these"].map(
+                    {["The sense of a related but distinct concept", "The sense of a broader category", "None of these"].map(
                       (opt, idx) => (
                         <button
                           key={idx}
@@ -116,12 +116,12 @@ export function P2SharpenScreen({
               {/* Socratic question */}
               <div className="mb-4 p-4 rounded-lg border border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-amber-500/5">
                 <p className="text-[12px] mb-3 text-[#c0c0c8]">
-                  Which sense best matches what YOU mean by 'nocturnal' here?
+                  Which sense best matches what YOU mean by [your term] here?
                 </p>
                 <div className="space-y-2">
                   {[
-                    { letter: "A", text: "Organisms active at night" },
-                    { letter: "B", text: "Events occurring during nighttime" },
+                    { letter: "A", text: "A specific instance or category" },
+                    { letter: "B", text: "A broader or related concept" },
                     { letter: "C", text: "Something else" },
                   ].map((opt) => (
                     <button
@@ -157,10 +157,10 @@ export function P2SharpenScreen({
               {/* Distinguish from neighbors */}
               <div className="mb-4 p-3 bg-[#1a1a26] border border-[#2a2a3a] rounded-lg">
                 <p className="text-[11px] text-[#c0c0c8]">
-                  <strong className="text-[#e0e0e8]">vs NocturnalActivity:</strong> yours requires the subject to be an organism
+                  <strong className="text-[#e0e0e8]">vs RelatedConcept1:</strong> yours has property X
                 </p>
                 <p className="text-[11px] text-[#c0c0c8] mt-1">
-                  <strong className="text-[#e0e0e8]">vs Night:</strong> yours is a property of organisms, not a time interval
+                  <strong className="text-[#e0e0e8]">vs RelatedConcept2:</strong> yours differs in scope Y
                 </p>
               </div>
 

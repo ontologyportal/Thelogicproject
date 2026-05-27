@@ -115,53 +115,40 @@ export function PhaseTransition({ open, status = "processing…" }: { open: bool
 }
 
 /**
- * Step Navigator Sidebar - Hi-fi dark mode
+ * Step Navigator - Horizontal strip below top nav
  */
-export function StepNavigator({ current, completed = [] }: { current: number; completed?: number[] }) {
-  const STEPS = [
-    { n: 1, title: "Describe", desc: "Tell us what you observed" },
-    { n: 2, title: "Search", desc: "Check for existing terms" },
-    { n: 3, title: "Sharpen", desc: "Distinguish from similar" },
-    { n: 4, title: "Classify", desc: "Determine term type" },
-    { n: 5, title: "Place", desc: "Find parent in hierarchy" },
-    { n: 6, title: "Define", desc: "Author definition" },
-    { n: 7, title: "Statements", desc: "Extract axioms" },
-    { n: 8, title: "Verify", desc: "Run validation gates" },
-    { n: 9, title: "Submit", desc: "Contribute to knowledge base" },
-  ];
-
+export function StepNavigator({
+  currentPhase,
+  completedPhases = [],
+  onPhaseClick,
+}: {
+  currentPhase: PhaseId;
+  completedPhases?: PhaseId[];
+  onPhaseClick?: (phase: PhaseId) => void;
+}) {
   return (
-    <div className="w-[220px] border-r border-[#1a1a26] bg-[#181826] flex flex-col flex-shrink-0">
-      <div className="px-4 py-3 border-b border-[#1a1a26]">
-        <div className="text-[10px] uppercase tracking-wider text-[#717182] mb-1">Protocol</div>
-        <div className="text-[13px] text-[#e0e0e8]">9-Phase Term Authoring</div>
-      </div>
-      <div className="flex-1 overflow-auto py-2">
-        {STEPS.map((s) => {
-          const done = completed.includes(s.n);
-          const active = s.n === current;
-          const locked = !done && !active && s.n > current;
+    <div className="w-full border-b border-[#1a1a26] bg-[#181826] overflow-x-auto">
+      <div className="flex items-center gap-2 px-4 py-2 min-w-max">
+        {PHASES.map((phase) => {
+          const isCurrent = phase.id === currentPhase;
+          const isCompleted = completedPhases.includes(phase.id);
+          const isUpcoming = !isCurrent && !isCompleted;
+
           return (
-            <div
-              key={s.n}
-              className={`relative px-4 py-2.5 cursor-pointer transition-colors ${
-                active ? "bg-blue-500/10 border-l-2 border-blue-500" : "border-l-2 border-transparent hover:bg-white/[0.02]"
+            <button
+              key={phase.id}
+              onClick={() => onPhaseClick?.(phase.id)}
+              className={`px-3 py-1.5 text-[11px] rounded transition-colors whitespace-nowrap ${
+                isCurrent
+                  ? "bg-amber-400/20 border-2 border-amber-400/60 text-amber-400"
+                  : isCompleted
+                  ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400"
+                  : "border-2 border-dashed border-[#2a2a3a] text-[#717182] hover:border-[#3a3a4a]"
               }`}
             >
-              <div className="flex items-start gap-2.5">
-                <div
-                  className={`size-5 rounded-full flex items-center justify-center text-[10px] flex-shrink-0 mt-0.5 ${
-                    done ? "bg-emerald-500 text-white" : active ? "bg-blue-500 text-white" : locked ? "bg-[#2a2a3a] text-[#555]" : "bg-[#2a2a3a] text-[#a0a0b0]"
-                  }`}
-                >
-                  {done ? "✓" : s.n}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className={`text-[12px] ${locked ? "text-[#555]" : active ? "text-white" : "text-[#d0d0d8]"}`}>{s.title}</div>
-                  <div className={`text-[10px] mt-0.5 ${locked ? "text-[#444]" : "text-[#717182]"} leading-tight`}>{s.desc}</div>
-                </div>
-              </div>
-            </div>
+              {isCompleted && <span className="mr-1">✓</span>}
+              {phase.label}
+            </button>
           );
         })}
       </div>

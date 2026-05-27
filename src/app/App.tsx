@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { TopNavigation, PhaseTransition } from "./components/logic/Navigation";
+import { TopNavigation, PhaseTransition, StepNavigator } from "./components/logic/Navigation";
 import { type PhaseId } from "./components/logic/shared";
 import {
   SplashScreen,
@@ -21,6 +21,7 @@ import {
  */
 export default function App() {
   const [currentPhase, setCurrentPhase] = useState<PhaseId>("splash");
+  const [completedPhases, setCompletedPhases] = useState<PhaseId[]>([]);
   const [authStatus, setAuthStatus] = useState<"authenticated" | "guest" | "none">("none");
   const [userName] = useState("demo-user");
   const [transition, setTransition] = useState<{ open: boolean; status: string }>({
@@ -35,6 +36,10 @@ export default function App() {
   });
 
   const navigateWithTransition = (phase: PhaseId, status: string) => {
+    // Mark current phase as completed before transitioning
+    if (currentPhase !== "splash" && !completedPhases.includes(currentPhase)) {
+      setCompletedPhases([...completedPhases, currentPhase]);
+    }
     setTransition({ open: true, status });
     setTimeout(() => {
       setCurrentPhase(phase);
@@ -43,6 +48,10 @@ export default function App() {
   };
 
   const navigate = (phase: PhaseId) => {
+    // Mark current phase as completed before navigating
+    if (currentPhase !== "splash" && !completedPhases.includes(currentPhase)) {
+      setCompletedPhases([...completedPhases, currentPhase]);
+    }
     setCurrentPhase(phase);
   };
 
@@ -83,7 +92,7 @@ export default function App() {
               navigateWithTransition("p3-classify", "Analyzing concept type…");
             }}
             onBack={() => navigate("p1-describe")}
-            candidates={["NocturnalActivity", "Night", "DiurnalAnimal"]}
+            candidates={["RelatedConcept1", "RelatedConcept2", "RelatedConcept3"]}
           />
         );
 
@@ -149,12 +158,19 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#13131c] text-[#e0e0e8]">
       {currentPhase !== "splash" && (
-        <TopNavigation
-          currentPhase={currentPhase}
-          onPhaseClick={(phase) => navigate(phase)}
-          authStatus={authStatus}
-          userName={authStatus === "authenticated" ? userName : undefined}
-        />
+        <>
+          <TopNavigation
+            currentPhase={currentPhase}
+            onPhaseClick={(phase) => navigate(phase)}
+            authStatus={authStatus}
+            userName={authStatus === "authenticated" ? userName : undefined}
+          />
+          <StepNavigator
+            currentPhase={currentPhase}
+            completedPhases={completedPhases}
+            onPhaseClick={(phase) => navigate(phase)}
+          />
+        </>
       )}
 
       {renderScreen()}

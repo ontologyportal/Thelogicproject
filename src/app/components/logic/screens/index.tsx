@@ -107,7 +107,7 @@ export function P4PlaceScreen({
               <div className="mb-4 p-3 bg-[#1a1a26] border border-[#2a2a3a] rounded-lg">
                 <p className="text-[11px] mb-2 text-[#a0a0b0]">Preview hierarchy:</p>
                 <p className="text-[12px] text-[#c0c0c8] font-mono">
-                  Entity → Abstract → FinancialInstrument → <span className="underline text-blue-400">YourTerm</span>
+                  Entity → PhysicalObject → <span className="text-[#a0a0b0]">[GenericParent]</span> → <span className="underline text-blue-400">[YourConcept]</span>
                 </p>
               </div>
 
@@ -149,9 +149,9 @@ export function P5DefineScreen({
   const [showRecycleModal, setShowRecycleModal] = useState(false);
 
   const fields = [
-    { label: "Most specific, more general thing it is a kind of", value: "Attribute", gloss: "the broader category it belongs to" },
-    { label: "Everyday English Name", value: "Nocturnal", gloss: "the friendly label people will read" },
-    { label: "One-Sentence Simple Description", value: "An organism or activity that is active primarily during nighttime hours.", gloss: "summary anyone can understand" },
+    { label: "Most specific, more general thing it is a kind of", value: "[Parent Category]", gloss: "the broader category it belongs to" },
+    { label: "Everyday English Name", value: "[Your Term]", gloss: "the friendly label people will read" },
+    { label: "One-Sentence Simple Description", value: "[Generated description placeholder]", gloss: "summary anyone can understand" },
   ];
 
   return (
@@ -253,9 +253,9 @@ export function P6StatementsScreen({
   onBack?: () => void;
 }) {
   const [statements, setStatements] = useState([
-    { text: "If something is nocturnal, then it is active primarily during nighttime hours.", approved: false },
-    { text: "Nocturnal organisms have adaptations for low-light conditions.", approved: false },
-    { text: "Nocturnal behavior is the opposite of diurnal behavior.", approved: false },
+    { text: "If something is a [YourConcept], then [property 1].", approved: false },
+    { text: "[YourConcept] has [property 2].", approved: false },
+    { text: "[YourConcept] relates to [property 3].", approved: false },
   ]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editText, setEditText] = useState("");
@@ -277,7 +277,7 @@ export function P6StatementsScreen({
       // Replace edited statement with 1-2 new ones
       const newStatements = [...statements];
       newStatements.splice(editingIndex!, 1,
-        { text: "Nocturnal species typically have enhanced night vision.", approved: false }
+        { text: "[YourConcept] exhibits [refined property].", approved: false }
       );
       setStatements(newStatements);
       setIsLoading(false);
@@ -407,15 +407,15 @@ export function P7VerifyScreen({
   });
 
   const gates = [
-    { label: "Your definition is well-formed.", status: gatesComplete ? "pass" : "checking" },
-    { label: "Linked to common English meaning.", status: gatesComplete ? "pass" : "checking" },
-    { label: "No conflicts found with existing knowledge.", status: gatesComplete ? "pass" : "checking" },
-    { label: "Your test scenario proves true.", status: gatesComplete ? "pass" : "checking" },
-    { label: "Every claim in your description is backed up.", status: gatesComplete ? "pass" : "checking" },
+    { label: "Gate 1: Syntax check passed", status: gatesComplete ? "pass" : "checking" },
+    { label: "Gate 2: Reference check passed", status: gatesComplete ? "pass" : "checking" },
+    { label: "Gate 3: Consistency check passed", status: gatesComplete ? "pass" : "checking" },
+    { label: "Gate 4: Scenario verification passed", status: gatesComplete ? "pass" : "checking" },
+    { label: "Gate 5: Completeness check passed", status: gatesComplete ? "pass" : "checking" },
   ];
 
-  const naturalLanguageStatement = "Every nocturnal organism is active primarily during nighttime hours.";
-  const kifStatement = "(=> (instance ?O Nocturnal) (exists (?T) (and (instance ?T NightTime) (holdsDuring ?T (attribute ?O Active)))))";
+  const naturalLanguageStatement = "Every [YourConcept] has [defining property].";
+  const kifStatement = "(=> (instance ?X YourConcept) (attribute ?X DefiningProperty))";
 
   const displayStatement = devView ? kifStatement : naturalLanguageStatement;
 
@@ -471,7 +471,7 @@ export function P7VerifyScreen({
           <div className="p-4 bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/30 rounded-lg">
             <p className="text-[11px] font-medium mb-2 text-amber-400">Test scenario from Phase 1</p>
             <p className="text-[12px] text-[#c0c0c8] mb-3">
-              If something is nocturnal, then it is active at night.
+              If something is a [YourConcept], then [expected property].
             </p>
             <div className="flex gap-2">
               <button
@@ -520,14 +520,14 @@ export function P7VerifyScreen({
       {showAIModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="bg-[#13131c] border border-[#1f1f2c] rounded-lg shadow-xl max-w-lg w-full mx-4 p-6">
-            <h3 className="text-[15px] font-medium text-[#e0e0e8] mb-3">AI Analysis: Nocturnal</h3>
+            <h3 className="text-[15px] font-medium text-[#e0e0e8] mb-3">AI Analysis: [YourConcept]</h3>
             <p className="text-[13px] text-[#c0c0c8] mb-4 leading-relaxed">
-              This term defines <strong>Nocturnal</strong> as a subclass of <strong>Attribute</strong>. It is consistent with 5 existing related terms in the knowledge base. The closest neighbors are:
+              This term defines <strong>[YourConcept]</strong> as a subclass of <strong>[ParentCategory]</strong>. It is consistent with related terms in the knowledge base. The closest neighbors are:
             </p>
             <ul className="text-[12px] text-[#c0c0c8] mb-4 space-y-1 list-disc list-inside">
-              <li>Diurnal (opposite temporal pattern)</li>
-              <li>NightTime (temporal context)</li>
-              <li>NocturnalActivity (related process)</li>
+              <li>RelatedTerm1 (relationship type)</li>
+              <li>RelatedTerm2 (relationship type)</li>
+              <li>RelatedTerm3 (relationship type)</li>
             </ul>
             <button
               onClick={() => setShowAIModal(false)}
@@ -561,7 +561,7 @@ export function SubmitScreen({
           subtitle="your contribution is on its way"
         >
           <div className="mb-6 p-4 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/30 rounded-lg text-center">
-            <p className="text-[16px] mb-1 text-emerald-400">🎉 PR #482 opened · CarbonOffsetCredit</p>
+            <p className="text-[16px] mb-1 text-emerald-400">🎉 PR #[NNN] opened · [YourConcept]</p>
             <p className="text-[11px] text-[#717182]">
               Guest? routed to staging queue. Signed in? PR opened on your fork.
             </p>
@@ -573,7 +573,7 @@ export function SubmitScreen({
             </label>
             <div className="flex gap-2">
               <button className="px-3 py-1.5 text-[12px] bg-blue-500 hover:bg-blue-600 rounded-md text-white">
-                OffsetVintage
+                [SuggestedNextTerm]
               </button>
               <select className="px-3 py-1.5 text-[12px] bg-[#13131c] border border-[#2a2a3a] rounded-md text-[#a0a0b0]">
                 <option>More suggestions...</option>

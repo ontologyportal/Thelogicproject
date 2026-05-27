@@ -17,6 +17,7 @@ export function P1DescribeScreen({
   const [description, setDescription] = useState("");
   const [scenario, setScenario] = useState("");
   const [demoModal, setDemoModal] = useState<string | null>(null);
+  const [showTitleHelp, setShowTitleHelp] = useState(false);
 
   const wordCount = description.trim().split(/\s+/).filter(Boolean).length;
   const showCallout = description.length > 0 && wordCount < 20;
@@ -187,8 +188,12 @@ export function P1DescribeScreen({
               <span className="text-[10px] uppercase tracking-wider text-blue-400">✨ auto-generated title: </span>
               <span className="font-mono font-medium text-[#e0e0e8]">{autoTitle}</span>
             </div>
-            <button className="size-6 rounded hover:bg-white/5 flex items-center justify-center text-[#a0a0b0]">
-              <RefreshCw className="size-3" />
+            <button
+              onClick={() => setShowTitleHelp(true)}
+              className="size-6 rounded hover:bg-white/5 flex items-center justify-center text-[#a0a0b0]"
+              title="Learn about SUMO term names"
+            >
+              <HelpCircle className="size-3.5" />
             </button>
           </div>
         </Frame>
@@ -207,6 +212,27 @@ export function P1DescribeScreen({
             </p>
             <button
               onClick={() => setDemoModal(null)}
+              className="w-full py-2 bg-blue-500 hover:bg-blue-600 rounded-md text-[13px] text-white mb-3"
+            >
+              Got it
+            </button>
+            <p className="text-xs italic text-neutral-500 text-center">
+              If you type something specific we haven't pre-loaded, we're working on providing tailored feedback for it. This demo uses canned responses.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Title Help Modal */}
+      {showTitleHelp && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-[#13131c] border border-[#1f1f2c] rounded-lg shadow-xl max-w-lg w-full mx-4 p-6">
+            <h3 className="text-[15px] font-medium text-[#e0e0e8] mb-3">About SUMO Term Names</h3>
+            <p className="text-[13px] text-[#c0c0c8] mb-4 leading-relaxed">
+              This is your concept's SUMO term name. A good SUMO term must be unique within the knowledge base and should accurately describe the concept you are formalizing. The system generates a CamelCase candidate from your description, but you can refine it as you continue.
+            </p>
+            <button
+              onClick={() => setShowTitleHelp(false)}
               className="w-full py-2 bg-blue-500 hover:bg-blue-600 rounded-md text-[13px] text-white mb-3"
             >
               Got it
