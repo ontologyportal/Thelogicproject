@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { RefreshCw, Mic, ImageIcon, Upload, MessagesSquare, HelpCircle } from "lucide-react";
 import { Frame, AppFooter } from "../shared";
 import { FooterNavigation } from "../Navigation";
@@ -10,9 +10,11 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../
 export function P1DescribeScreen({
   onNext,
   onBack,
+  onAutoTitleChange,
 }: {
   onNext: (data: { description: string; scenario: string }) => void;
   onBack?: () => void;
+  onAutoTitleChange?: (title: string) => void;
 }) {
   const [description, setDescription] = useState("");
   const [scenario, setScenario] = useState("");
@@ -32,7 +34,7 @@ export function P1DescribeScreen({
   const extractedText = {
     mic: "I was reading about animals that hunt at night and never quite knew what to call that property.",
     image: "A nocturnal bird with large eyes adapted to low light, silent flight feathers, seen perched at dusk.",
-    upload: "Notes on nocturnal animals — covering nocturnal, crepuscular, and circadian behavior in predators.",
+    upload: "Notes on nocturnal animals, covering nocturnal, crepuscular, and circadian behavior in predators.",
     link: "Nocturnality is an animal behavior characterized by being active during the night and sleeping during the day.",
   };
 
@@ -75,6 +77,11 @@ export function P1DescribeScreen({
       .map(w => w.charAt(0).toUpperCase() + w.slice(1))
       .join("");
   })();
+
+  // Update parent component with auto-generated title
+  useEffect(() => {
+    onAutoTitleChange?.(autoTitle);
+  }, [autoTitle, onAutoTitleChange]);
 
   const canAdvance = description.trim().length > 0 && scenario.trim().length > 0;
 

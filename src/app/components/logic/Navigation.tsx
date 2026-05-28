@@ -10,7 +10,7 @@ export function TopNavigation({
   onPhaseClick,
   authStatus = "guest",
   userName,
-  termName = "Nocturnal",
+  termName = "[unnamed concept]",
 }: {
   currentPhase: PhaseId;
   onPhaseClick?: (phase: PhaseId) => void;
@@ -18,12 +18,14 @@ export function TopNavigation({
   userName?: string;
   termName?: string;
 }) {
+  const isUnnamed = termName === "[unnamed concept]";
+
   return (
     <div className="h-12 border-b border-[#1a1a26] bg-[#161622] flex items-center justify-between px-4 flex-shrink-0">
       <div className="flex items-center gap-3">
         <span className="text-[12px] text-[#a0a0b0]">Your contribution</span>
         <ChevronRight className="size-3 text-[#717182]" />
-        <span className="text-[12px] text-[#e0e0e8]">{termName}</span>
+        <span className={`text-[12px] ${isUnnamed ? "text-[#717182]" : "text-[#e0e0e8]"}`}>{termName}</span>
         <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">DRAFT</span>
       </div>
       <div className="flex items-center gap-2">

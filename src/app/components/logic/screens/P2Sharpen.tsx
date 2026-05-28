@@ -29,7 +29,14 @@ export function P2SharpenScreen({
     link: "Link demo: [Demo URL: example.org/concept-disambiguation. The system has parsed the page summary.]",
   };
 
-  const canAdvance = state === "new" || senseChoice === "yes" || senseChoice === "no";
+  // Next is enabled when:
+  // - User in "new" state AND has typed refinement text
+  // - senseChoice === "yes"
+  // - senseChoice === "no" AND selectedSocraticOption is selected
+  const canAdvance = 
+    (state === "new" && refineNew.trim().length > 0) ||
+    senseChoice === "yes" ||
+    (senseChoice === "no" && selectedSocraticOption.length > 0);
 
   return (
     <div className="h-full flex flex-col bg-[#13131c] text-[#e0e0e8]">

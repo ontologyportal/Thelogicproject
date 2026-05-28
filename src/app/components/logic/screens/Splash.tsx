@@ -108,7 +108,7 @@ export function SplashScreen({
               {[
                 { n: "25,000+", l: "Concepts already defined", s: "spanning every domain you can think of" },
                 { n: "180,000+", l: "Logical statements", s: "every one machine-checkable" },
-                { n: "Open", l: "License — forever", s: "GNU General Public, no gatekeepers" },
+                { n: "Open", l: "License: forever", s: "GNU General Public, no gatekeepers" },
               ].map(s => (
                 <div key={s.l} className="bg-[#13131c] border border-[#1f1f2c] rounded-xl p-5">
                   <div className="text-[24px] tracking-tight mb-1 text-[#e0e0e8]">{s.n}</div>

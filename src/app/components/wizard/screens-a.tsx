@@ -25,11 +25,10 @@ export function ScreenLanding({ go }: { go: (k: string) => void }) {
               <div className="text-[11px] uppercase tracking-[0.22em] text-[#a0a0b0]">Sigma Gamma · open knowledge initiative</div>
             </div>
             <h1 className="text-[44px] leading-[1.05] tracking-tight max-w-[820px] mb-5">
-              Contribute to truly open AI —
-              <span className="text-[#717182]"> defined by you.</span>
+              Contribute to truly open AI, defined by you.
             </h1>
             <p className="text-[15px] text-[#c0c0c8] max-w-[640px] leading-relaxed mb-9">
-              You're adding to a public, traceable map of how the world is described. Anyone can use it. No login walls, no proprietary formats — just shared knowledge with your name on the contribution.
+              You're adding to a public, traceable map of how the world is described. Anyone can use it. No login walls, no proprietary formats, just shared knowledge with your name on the contribution.
             </p>
             <div className="flex items-center gap-3 mb-4">
               <button onClick={() => go("describe")} className="px-5 py-3 bg-blue-500 hover:bg-blue-600 rounded-lg text-[13px] text-white flex items-center gap-2 shadow-lg shadow-blue-500/20">
@@ -64,7 +63,7 @@ export function ScreenLanding({ go }: { go: (k: string) => void }) {
               {[
                 { n: "25,000+", l: "Concepts already defined", s: "spanning every domain you can think of" },
                 { n: "180,000+", l: "Logical statements", s: "every one machine-checkable" },
-                { n: "Open", l: "License — forever", s: "GNU General Public, no gatekeepers" },
+                { n: "Open", l: "License: forever", s: "GNU General Public, no gatekeepers" },
               ].map(s => (
                 <div key={s.l} className="bg-[#13131c] border border-[#1f1f2c] rounded-xl p-5">
                   <div className="text-[24px] tracking-tight mb-1">{s.n}</div>

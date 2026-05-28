@@ -24,6 +24,7 @@ export default function App() {
   const [completedPhases, setCompletedPhases] = useState<PhaseId[]>([]);
   const [authStatus, setAuthStatus] = useState<"authenticated" | "guest" | "none">("none");
   const [userName] = useState("demo-user");
+  const [autoTitle, setAutoTitle] = useState("");
   const [transition, setTransition] = useState<{ open: boolean; status: string }>({
     open: false,
     status: "",
@@ -74,6 +75,7 @@ export default function App() {
               navigate("p2-search");
             }}
             onBack={() => navigate("splash")}
+            onAutoTitleChange={setAutoTitle}
           />
         );
 
@@ -164,6 +166,7 @@ export default function App() {
             onPhaseClick={(phase) => navigate(phase)}
             authStatus={authStatus}
             userName={authStatus === "authenticated" ? userName : undefined}
+            termName={autoTitle || "[unnamed concept]"}
           />
           <StepNavigator
             currentPhase={currentPhase}

@@ -7,7 +7,7 @@ export { P3ClassifyScreen } from "./P3Classify";
 
 import { Frame, RefineBox, AppFooter } from "../shared";
 import { FooterNavigation } from "../Navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 /**
  * P4: Find Its Parent - Hi-fi dark mode
@@ -154,7 +154,7 @@ export function P4PlaceScreen({
             >
               Got it
             </button>
-            <p className="text-xs text-neutral-500 text-center">
+            <p className="text-xs italic text-neutral-500 text-center">
               If you type something specific we haven't pre-loaded, we're working on providing tailored feedback for it. This demo uses canned responses.
             </p>
           </div>
@@ -175,6 +175,9 @@ export function P5DefineScreen({
   onBack?: () => void;
 }) {
   const [accepted, setAccepted] = useState<boolean[]>([false, false, false]);
+  const [edited, setEdited] = useState<boolean[]>([false, false, false]);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editValue, setEditValue] = useState("");
   const [showRecycleModal, setShowRecycleModal] = useState(false);
   const [demoModal, setDemoModal] = useState<string | null>(null);
 
@@ -185,11 +188,38 @@ export function P5DefineScreen({
     link: "Link demo: [Demo URL: terminology-standards.org/best-practices. The system has parsed the page summary.]",
   };
 
-  const fields = [
+  const initialFields = [
     { label: "Most specific, more general thing it is a kind of", value: "[Parent Category]", gloss: "the broader category it belongs to" },
     { label: "Everyday English Name", value: "[Your Term]", gloss: "the friendly label people will read" },
     { label: "One-Sentence Simple Description", value: "[Generated description placeholder]", gloss: "summary anyone can understand" },
   ];
+
+  const [fieldValues, setFieldValues] = useState(initialFields.map(f => f.value));
+
+  const handleEdit = (idx: number) => {
+    setEditingIndex(idx);
+    setEditValue(fieldValues[idx]);
+  };
+
+  const handleSave = () => {
+    if (editingIndex !== null) {
+      const newValues = [...fieldValues];
+      newValues[editingIndex] = editValue;
+      setFieldValues(newValues);
+
+      const newEdited = [...edited];
+      newEdited[editingIndex] = true;
+      setEdited(newEdited);
+
+      setEditingIndex(null);
+      setEditValue("");
+    }
+  };
+
+  const handleCancel = () => {
+    setEditingIndex(null);
+    setEditValue("");
+  };
 
   return (
     <div className="h-full flex flex-col bg-[#13131c] text-[#e0e0e8]">
@@ -198,43 +228,81 @@ export function P5DefineScreen({
           title="Phase 5. Define the term"
           subtitle="review our suggestions and edit if needed"
         >
-          {fields.map((field, idx) => (
-            <div key={idx} className="mb-4 p-3 bg-[#1a1a26] border border-[#2a2a3a] rounded-lg">
-              <label className="text-[10px] uppercase tracking-wider text-[#717182] mb-1 block">
-                {field.label}
-                <span className="text-[10px] italic text-[#555] normal-case ml-1">({field.gloss})</span>
-              </label>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="flex-1 text-[13px] text-[#e0e0e8]">{field.value}</span>
-                <button
-                  onClick={() => setShowRecycleModal(true)}
-                  className="size-6 rounded hover:bg-white/5 flex items-center justify-center text-[#a0a0b0]"
-                  title="Recycle term"
-                >
-                  🔄
-                </button>
+          {initialFields.map((field, idx) => {
+            const isEditing = editingIndex === idx;
+            const isEdited = edited[idx];
+            const isAccepted = accepted[idx];
+
+            return (
+              <div key={idx} className="mb-4 p-3 bg-[#1a1a26] border border-[#2a2a3a] rounded-lg">
+                <label className="text-[10px] uppercase tracking-wider text-[#717182] mb-1 block">
+                  {field.label}
+                  <span className="text-[10px] text-[#555] normal-case ml-1">({field.gloss})</span>
+                  {isEdited && <span className="ml-2 text-[10px] text-emerald-400">✓ edited</span>}
+                </label>
+
+                {isEditing ? (
+                  <>
+                    <textarea
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      rows={3}
+                      className="w-full bg-[#13131c] border border-[#2a2a3a] rounded-lg px-3 py-2 text-[13px] mb-2 outline-none resize-none focus:border-blue-500/40 text-[#e0e0e8]"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleSave}
+                        className="px-3 py-1.5 text-[11px] rounded-md bg-blue-500 hover:bg-blue-600 text-white"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={handleCancel}
+                        className="px-3 py-1.5 text-[11px] rounded-md bg-[#13131c] border border-[#2a2a3a] text-[#a0a0b0] hover:border-[#3a3a4a]"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="flex-1 text-[13px] text-[#e0e0e8]">{fieldValues[idx]}</span>
+                      <button
+                        onClick={() => setShowRecycleModal(true)}
+                        className="size-6 rounded hover:bg-white/5 flex items-center justify-center text-[#a0a0b0]"
+                        title="Recycle term"
+                      >
+                        🔄
+                      </button>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          const newAccepted = [...accepted];
+                          newAccepted[idx] = true;
+                          setAccepted(newAccepted);
+                        }}
+                        className={`px-3 py-1.5 text-[11px] rounded-md ${
+                          isAccepted
+                            ? "bg-blue-500 text-white"
+                            : "bg-[#13131c] border border-[#2a2a3a] text-[#a0a0b0] hover:border-[#3a3a4a]"
+                        }`}
+                      >
+                        A · accept
+                      </button>
+                      <button
+                        onClick={() => handleEdit(idx)}
+                        className="px-3 py-1.5 text-[11px] rounded-md bg-[#13131c] border border-[#2a2a3a] text-[#a0a0b0] hover:border-[#3a3a4a]"
+                      >
+                        B · edit
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    const newAccepted = [...accepted];
-                    newAccepted[idx] = true;
-                    setAccepted(newAccepted);
-                  }}
-                  className={`px-3 py-1.5 text-[11px] rounded-md ${
-                    accepted[idx]
-                      ? "bg-blue-500 text-white"
-                      : "bg-[#13131c] border border-[#2a2a3a] text-[#a0a0b0] hover:border-[#3a3a4a]"
-                  }`}
-                >
-                  A · accept
-                </button>
-                <button className="px-3 py-1.5 text-[11px] rounded-md bg-[#13131c] border border-[#2a2a3a] text-[#a0a0b0] hover:border-[#3a3a4a]">
-                  B · edit
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
 
           <RefineBox
             onMicClick={() => setDemoModal("mic")}
@@ -247,7 +315,11 @@ export function P5DefineScreen({
         <AppFooter />
       </div>
 
-      <FooterNavigation onBack={onBack} onNext={onNext} nextDisabled={!accepted.every(Boolean)} />
+      <FooterNavigation
+        onBack={onBack}
+        onNext={onNext}
+        nextDisabled={!(accepted.every((val, idx) => val || edited[idx]))}
+      />
 
       {/* Recycle Modal */}
       {showRecycleModal && (
@@ -294,7 +366,7 @@ export function P5DefineScreen({
             >
               Got it
             </button>
-            <p className="text-xs text-neutral-500 text-center">
+            <p className="text-xs italic text-neutral-500 text-center">
               If you type something specific we haven't pre-loaded, we're working on providing tailored feedback for it. This demo uses canned responses.
             </p>
           </div>
@@ -471,7 +543,7 @@ export function P6StatementsScreen({
             >
               Got it
             </button>
-            <p className="text-xs text-neutral-500 text-center">
+            <p className="text-xs italic text-neutral-500 text-center">
               If you type something specific we haven't pre-loaded, we're working on providing tailored feedback for it. This demo uses canned responses.
             </p>
           </div>
@@ -496,9 +568,10 @@ export function P7VerifyScreen({
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [showAIModal, setShowAIModal] = useState(false);
 
-  useState(() => {
-    setTimeout(() => setGatesComplete(true), 2000);
-  });
+  useEffect(() => {
+    const timer = setTimeout(() => setGatesComplete(true), 2000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const gates = [
     { label: "Gate 1: Syntax check passed", status: gatesComplete ? "pass" : "checking" },
