@@ -71,7 +71,7 @@ export default function App() {
           <P1DescribeScreen
             onNext={(data) => {
               console.log("P1 data:", data);
-              navigateWithTransition("p2-search", "Searching the knowledge base…");
+              navigate("p2-search");
             }}
             onBack={() => navigate("splash")}
           />

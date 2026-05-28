@@ -65,10 +65,7 @@ export function P3ClassifyScreen({
                     </p>
                   ) : isCurrent ? (
                     <>
-                      <p
-                        className="text-[15px] mb-4 text-[#e0e0e8]"
-                        style={{ fontFamily: "Comic Sans MS, cursive" }}
-                      >
+                      <p className="text-[15px] mb-4 text-[#e0e0e8]">
                         {question}
                       </p>
                       <div className="flex gap-2">

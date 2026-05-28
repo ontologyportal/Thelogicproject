@@ -23,10 +23,25 @@ export function P1DescribeScreen({
   const showCallout = description.length > 0 && wordCount < 20;
 
   const demoContent = {
-    mic: "Voice recording demo: [Demo audio captured: 23 seconds. Transcription: 'Small coastal bird, found in dune grass…']",
-    image: "Image demo: [Demo image uploaded: monterey-dune-warbler.jpg. The system has identified visual features: small songbird, brown plumage, teal eye stripe.]",
-    upload: "File demo: [Demo file uploaded: field-notes.pdf, 2 pages. The system has extracted key terms: coastal, dune, warbler, sandy substrate.]",
-    link: "Link demo: [Demo URL: ebird.org/species/monterey-dune-warbler. The system has parsed the page summary.]",
+    mic: "Voice recording demo: [Demo audio captured: 17 seconds. Transcription: 'I was reading about animals that hunt at night and never quite knew what to call that property…']",
+    image: "Image demo: [Demo image uploaded: barn-owl-at-night.jpg. The system has identified visual features: large eyes adapted to low light, silent flight feathers, perched at dusk.]",
+    upload: "File demo: [Demo file uploaded: zoology-notes.pdf, 4 pages. The system has extracted key terms: nocturnal, crepuscular, circadian, predator.]",
+    link: "Link demo: [Demo URL: en.wikipedia.org/wiki/Nocturnality. The system has parsed the page summary.]",
+  };
+
+  const extractedText = {
+    mic: "I was reading about animals that hunt at night and never quite knew what to call that property.",
+    image: "A nocturnal bird with large eyes adapted to low light, silent flight feathers, seen perched at dusk.",
+    upload: "Notes on nocturnal animals — covering nocturnal, crepuscular, and circadian behavior in predators.",
+    link: "Nocturnality is an animal behavior characterized by being active during the night and sleeping during the day.",
+  };
+
+  const handleModalClose = () => {
+    if (demoModal) {
+      const textToInsert = extractedText[demoModal as keyof typeof extractedText];
+      setDescription(prev => prev ? `${prev}\n\n${textToInsert}` : textToInsert);
+    }
+    setDemoModal(null);
   };
 
   // Extract meaningful noun phrases for CamelCase canonical name
@@ -211,12 +226,12 @@ export function P1DescribeScreen({
               {demoContent[demoModal as keyof typeof demoContent]}
             </p>
             <button
-              onClick={() => setDemoModal(null)}
+              onClick={handleModalClose}
               className="w-full py-2 bg-blue-500 hover:bg-blue-600 rounded-md text-[13px] text-white mb-3"
             >
               Got it
             </button>
-            <p className="text-xs italic text-neutral-500 text-center">
+            <p className="text-xs text-neutral-500 text-center">
               If you type something specific we haven't pre-loaded, we're working on providing tailored feedback for it. This demo uses canned responses.
             </p>
           </div>

@@ -22,6 +22,14 @@ export function P4PlaceScreen({
   const [currentCard, setCurrentCard] = useState(0);
   const [answers, setAnswers] = useState<Array<"yes" | "no">>([]);
   const [elaboration, setElaboration] = useState("");
+  const [demoModal, setDemoModal] = useState<string | null>(null);
+
+  const demoContent = {
+    mic: "Voice recording demo: [Demo audio captured: 14 seconds. Transcription: 'It's like a financial instrument but specifically for environmental credits…']",
+    image: "Image demo: [Demo image uploaded: hierarchy-sketch.jpg. The system has identified visual features: tree diagram, parent-child relationships, annotation arrows.]",
+    upload: "File demo: [Demo file uploaded: taxonomy-draft.docx, 1 page. The system has extracted key terms: classification, inheritance, specialization.]",
+    link: "Link demo: [Demo URL: ontology-patterns.org/hierarchy-design. The system has parsed the page summary.]",
+  };
 
   const questions = [
     "Can you buy or sell it?",
@@ -72,10 +80,7 @@ export function P4PlaceScreen({
                     </p>
                   ) : isCurrent ? (
                     <>
-                      <p
-                        className="text-[15px] mb-4 text-[#e0e0e8]"
-                        style={{ fontFamily: "Comic Sans MS, cursive" }}
-                      >
+                      <p className="text-[15px] mb-4 text-[#e0e0e8]">
                         {question}
                       </p>
                       <div className="flex gap-2">
@@ -121,6 +126,10 @@ export function P4PlaceScreen({
                   onChange={setElaboration}
                   placeholder="Describe what makes your term more specific..."
                   rows={3}
+                  onMicClick={() => setDemoModal("mic")}
+                  onImageClick={() => setDemoModal("image")}
+                  onUploadClick={() => setDemoModal("upload")}
+                  onLinkClick={() => setDemoModal("link")}
                 />
               </div>
             </>
@@ -131,6 +140,26 @@ export function P4PlaceScreen({
       </div>
 
       <FooterNavigation onBack={onBack} onNext={onNext} nextDisabled={!canAdvance} />
+
+      {/* Demo Modal */}
+      {demoModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-[#13131c] border border-[#1f1f2c] rounded-lg shadow-xl max-w-lg w-full mx-4 p-6">
+            <p className="text-[13px] text-[#c0c0c8] mb-4 leading-relaxed">
+              {demoContent[demoModal as keyof typeof demoContent]}
+            </p>
+            <button
+              onClick={() => setDemoModal(null)}
+              className="w-full py-2 bg-blue-500 hover:bg-blue-600 rounded-md text-[13px] text-white mb-3"
+            >
+              Got it
+            </button>
+            <p className="text-xs text-neutral-500 text-center">
+              If you type something specific we haven't pre-loaded, we're working on providing tailored feedback for it. This demo uses canned responses.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -147,6 +176,14 @@ export function P5DefineScreen({
 }) {
   const [accepted, setAccepted] = useState<boolean[]>([false, false, false]);
   const [showRecycleModal, setShowRecycleModal] = useState(false);
+  const [demoModal, setDemoModal] = useState<string | null>(null);
+
+  const demoContent = {
+    mic: "Voice recording demo: [Demo audio captured: 21 seconds. Transcription: 'I think the parent category is too broad, maybe I need to be more specific about the domain…']",
+    image: "Image demo: [Demo image uploaded: definition-example.png. The system has identified visual features: dictionary entry, formal definition structure, example usage.]",
+    upload: "File demo: [Demo file uploaded: glossary-terms.csv, 15 rows. The system has extracted key terms: definition, parent class, attributes.]",
+    link: "Link demo: [Demo URL: terminology-standards.org/best-practices. The system has parsed the page summary.]",
+  };
 
   const fields = [
     { label: "Most specific, more general thing it is a kind of", value: "[Parent Category]", gloss: "the broader category it belongs to" },
@@ -199,7 +236,12 @@ export function P5DefineScreen({
             </div>
           ))}
 
-          <RefineBox />
+          <RefineBox
+            onMicClick={() => setDemoModal("mic")}
+            onImageClick={() => setDemoModal("image")}
+            onUploadClick={() => setDemoModal("upload")}
+            onLinkClick={() => setDemoModal("link")}
+          />
         </Frame>
 
         <AppFooter />
@@ -238,6 +280,26 @@ export function P5DefineScreen({
           </div>
         </div>
       )}
+
+      {/* Demo Modal */}
+      {demoModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-[#13131c] border border-[#1f1f2c] rounded-lg shadow-xl max-w-lg w-full mx-4 p-6">
+            <p className="text-[13px] text-[#c0c0c8] mb-4 leading-relaxed">
+              {demoContent[demoModal as keyof typeof demoContent]}
+            </p>
+            <button
+              onClick={() => setDemoModal(null)}
+              className="w-full py-2 bg-blue-500 hover:bg-blue-600 rounded-md text-[13px] text-white mb-3"
+            >
+              Got it
+            </button>
+            <p className="text-xs text-neutral-500 text-center">
+              If you type something specific we haven't pre-loaded, we're working on providing tailored feedback for it. This demo uses canned responses.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -262,6 +324,14 @@ export function P6StatementsScreen({
   const [showEditModal, setShowEditModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [demoModal, setDemoModal] = useState<string | null>(null);
+
+  const demoContent = {
+    mic: "Voice recording demo: [Demo audio captured: 18 seconds. Transcription: 'Actually that second statement isn't quite right, it should say that it implies a time-based pattern…']",
+    image: "Image demo: [Demo image uploaded: logic-correction.jpg. The system has identified visual features: crossed-out text, handwritten edits, revision marks.]",
+    upload: "File demo: [Demo file uploaded: statement-revisions.txt, 2 pages. The system has extracted key terms: implication, logical consequence, refinement.]",
+    link: "Link demo: [Demo URL: logic-patterns.org/statement-quality. The system has parsed the page summary.]",
+  };
 
   const handleEdit = (idx: number) => {
     setEditingIndex(idx);
@@ -361,6 +431,10 @@ export function P6StatementsScreen({
                 onChange={setEditText}
                 placeholder="Describe how this statement should be refined..."
                 rows={2}
+                onMicClick={() => setDemoModal("mic")}
+                onImageClick={() => setDemoModal("image")}
+                onUploadClick={() => setDemoModal("upload")}
+                onLinkClick={() => setDemoModal("link")}
               />
               <button
                 onClick={handleSubmitEdit}
@@ -381,6 +455,26 @@ export function P6StatementsScreen({
       {showToast && (
         <div className="fixed bottom-4 right-4 bg-[#13131c] border border-[#1f1f2c] rounded-lg shadow-xl p-4 animate-in slide-in-from-bottom-5">
           <p className="text-[12px] text-emerald-400">Statement dropped. The system will not include it in your definition.</p>
+        </div>
+      )}
+
+      {/* Demo Modal */}
+      {demoModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-[#13131c] border border-[#1f1f2c] rounded-lg shadow-xl max-w-lg w-full mx-4 p-6">
+            <p className="text-[13px] text-[#c0c0c8] mb-4 leading-relaxed">
+              {demoContent[demoModal as keyof typeof demoContent]}
+            </p>
+            <button
+              onClick={() => setDemoModal(null)}
+              className="w-full py-2 bg-blue-500 hover:bg-blue-600 rounded-md text-[13px] text-white mb-3"
+            >
+              Got it
+            </button>
+            <p className="text-xs text-neutral-500 text-center">
+              If you type something specific we haven't pre-loaded, we're working on providing tailored feedback for it. This demo uses canned responses.
+            </p>
+          </div>
         </div>
       )}
     </div>

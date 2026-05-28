@@ -19,7 +19,15 @@ export function P2SharpenScreen({
   const [selectedOption, setSelectedOption] = useState<string>("");
   const [selectedSocraticOption, setSelectedSocraticOption] = useState<string>("");
   const [customSense, setCustomSense] = useState("");
-  const [refine, setRefine] = useState("");
+  const [refineNew, setRefineNew] = useState("");
+  const [demoModal, setDemoModal] = useState<string | null>(null);
+
+  const demoContent = {
+    mic: "Voice recording demo: [Demo audio captured: 19 seconds. Transcription: 'So I know it's related to nighttime behavior, but I'm not sure if it's about the organisms themselves or just activities that happen at night…']",
+    image: "Image demo: [Demo image uploaded: concept-diagram.jpg. The system has identified visual features: Venn diagram, overlapping categories, handwritten labels.]",
+    upload: "File demo: [Demo file uploaded: research-notes.txt, 3 pages. The system has extracted key terms: temporal behavior, classification, attributes.]",
+    link: "Link demo: [Demo URL: example.org/concept-disambiguation. The system has parsed the page summary.]",
+  };
 
   const canAdvance = state === "new" || senseChoice === "yes" || senseChoice === "no";
 
@@ -139,7 +147,6 @@ export function P2SharpenScreen({
                             ? "bg-blue-500 text-white border-2 border-blue-600"
                             : "border border-[#3a3a4a] text-[#a0a0b0]"
                         }`}
-                        style={{ fontFamily: "Comic Sans MS, cursive" }}
                       >
                         {opt.letter}
                       </span>
@@ -173,8 +180,6 @@ export function P2SharpenScreen({
                   None of these fit. Let me describe the sense in my own words.
                 </button>
               </div>
-
-              <RefineBox value={refine} onChange={setRefine} />
             </>
           ) : (
             <>
@@ -187,7 +192,16 @@ export function P2SharpenScreen({
                 <label className="text-[13px] text-[#c0c0c8] mb-3 block leading-relaxed">
                   Think your concept is new enough to be its own term? Let's help you refine your definition to justify it.
                 </label>
-                <RefineBox value={refine} onChange={setRefine} placeholder="Add any additional details..." rows={4} />
+                <RefineBox
+                  value={refineNew}
+                  onChange={setRefineNew}
+                  placeholder="Add any additional details..."
+                  rows={4}
+                  onMicClick={() => setDemoModal("mic")}
+                  onImageClick={() => setDemoModal("image")}
+                  onUploadClick={() => setDemoModal("upload")}
+                  onLinkClick={() => setDemoModal("link")}
+                />
               </div>
 
               <button
@@ -204,6 +218,26 @@ export function P2SharpenScreen({
       </div>
 
       <FooterNavigation onBack={onBack} onNext={() => onNext(state)} nextDisabled={!canAdvance} />
+
+      {/* Demo Modal */}
+      {demoModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-[#13131c] border border-[#1f1f2c] rounded-lg shadow-xl max-w-lg w-full mx-4 p-6">
+            <p className="text-[13px] text-[#c0c0c8] mb-4 leading-relaxed">
+              {demoContent[demoModal as keyof typeof demoContent]}
+            </p>
+            <button
+              onClick={() => setDemoModal(null)}
+              className="w-full py-2 bg-blue-500 hover:bg-blue-600 rounded-md text-[13px] text-white mb-3"
+            >
+              Got it
+            </button>
+            <p className="text-xs text-neutral-500 text-center">
+              If you type something specific we haven't pre-loaded, we're working on providing tailored feedback for it. This demo uses canned responses.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

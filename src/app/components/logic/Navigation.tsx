@@ -1,5 +1,5 @@
 import { UserCircle2, Github, ChevronRight } from "lucide-react";
-import { PHASES, type PhaseId, SumoMark } from "./shared";
+import { PHASES, type PhaseId } from "./shared";
 import { Button } from "../ui/button";
 
 /**
@@ -103,7 +103,7 @@ export function PhaseTransition({ open, status = "processing…" }: { open: bool
             </span>
           </div>
         </div>
-        <p className="text-lg italic text-[#a0a0b0]" style={{ fontFamily: "Comic Sans MS, cursive" }}>
+        <p className="text-lg text-[#a0a0b0]">
           {status}
         </p>
         <p className="text-xs italic text-neutral-500 text-center mt-2">

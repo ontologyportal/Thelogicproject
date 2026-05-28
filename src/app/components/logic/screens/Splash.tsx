@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Github, UserCircle2, Globe2, Eye, ShieldCheck, ChevronRight } from "lucide-react";
-import { SumoMark } from "../shared";
 
 /**
  * Splash Screen - Hi-fi dark mode (v12 style)
@@ -123,10 +122,6 @@ export function SplashScreen({
 
         {/* Footer */}
         <div className="w-full text-center pt-4 pb-4">
-          <div className="flex items-center justify-center gap-2 mb-1">
-            <SumoMark size={20} />
-            <span className="text-xs text-neutral-500">SUMO</span>
-          </div>
           <p className="text-xs text-neutral-500">
             Powered by the{" "}
             <a

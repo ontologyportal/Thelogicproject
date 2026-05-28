@@ -37,12 +37,20 @@ export function RefineBox({
   value = "",
   onChange,
   onSend,
+  onMicClick,
+  onImageClick,
+  onUploadClick,
+  onLinkClick,
   placeholder = "type to refine, or use a mic / file / image…",
   rows = 1,
 }: {
   value?: string;
   onChange?: (value: string) => void;
   onSend?: () => void;
+  onMicClick?: () => void;
+  onImageClick?: () => void;
+  onUploadClick?: () => void;
+  onLinkClick?: () => void;
   placeholder?: string;
   rows?: number;
 }) {
@@ -56,16 +64,40 @@ export function RefineBox({
         className="flex-1 border-none bg-transparent resize-none focus-visible:ring-0 focus-visible:ring-offset-0 text-[13px] text-[#e0e0e8] placeholder:text-[#555]"
       />
       <div className="flex items-center gap-1 flex-shrink-0">
-        <Button variant="ghost" size="icon" className="size-8 text-[#a0a0b0] hover:bg-white/5" title="Voice input">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-8 text-[#a0a0b0] hover:bg-white/5"
+          title="Voice input"
+          onClick={onMicClick}
+        >
           <Mic className="size-4" />
         </Button>
-        <Button variant="ghost" size="icon" className="size-8 text-[#a0a0b0] hover:bg-white/5" title="Talk with AI">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-8 text-[#a0a0b0] hover:bg-white/5"
+          title="Talk with AI"
+          onClick={onLinkClick}
+        >
           <MessagesSquare className="size-4" />
         </Button>
-        <Button variant="ghost" size="icon" className="size-8 text-[#a0a0b0] hover:bg-white/5" title="Upload file">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-8 text-[#a0a0b0] hover:bg-white/5"
+          title="Upload file"
+          onClick={onUploadClick}
+        >
           <Upload className="size-4" />
         </Button>
-        <Button variant="ghost" size="icon" className="size-8 text-[#a0a0b0] hover:bg-white/5" title="Upload image">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-8 text-[#a0a0b0] hover:bg-white/5"
+          title="Upload image"
+          onClick={onImageClick}
+        >
           <ImageIcon className="size-4" />
         </Button>
         <Button
@@ -98,28 +130,12 @@ export function Wrestler({ size = 56, className = "" }: { size?: number; classNa
 }
 
 /**
- * SumoMark — brand logo
- */
-export function SumoMark({ size = 24, ring = false }: { size?: number; ring?: boolean }) {
-  const fontSize = Math.max(8, Math.round(size * 0.34));
-  return (
-    <div
-      className={`flex items-center justify-center rounded-md bg-gradient-to-br from-white to-[#e8ecf5] text-[#0a0a14] ${ring ? "ring-1 ring-white/10 shadow-[0_0_0_2px_rgba(59,130,246,0.25)]" : ""}`}
-      style={{ width: size, height: size, fontFamily: "JetBrains Mono, ui-monospace, monospace", fontWeight: 700, letterSpacing: "-0.04em", fontSize }}
-      aria-label="SUMO"
-    >
-      SUMO
-    </div>
-  );
-}
-
-/**
  * Plain — inline gloss span for jargon softening
- * handwritten font, italic, xs, neutral-500, parenthesized
+ * xs, neutral-500, parenthesized
  */
 export function Plain({ children }: { children: ReactNode }) {
   return (
-    <span className="text-xs italic text-neutral-500" style={{ fontFamily: "Comic Sans MS, cursive" }}>
+    <span className="text-xs text-neutral-500">
       ({children})
     </span>
   );
@@ -165,10 +181,6 @@ export type PhaseId = (typeof PHASES)[number]["id"];
 export function AppFooter({ isSplash = false }: { isSplash?: boolean }) {
   return (
     <div className="w-full text-center pt-4 pb-4">
-      <div className="flex items-center justify-center gap-2 mb-1">
-        <SumoMark size={20} />
-        <span className="text-xs text-neutral-500">SUMO</span>
-      </div>
       <p className="text-xs text-neutral-500">
         Powered by the{" "}
         <a
