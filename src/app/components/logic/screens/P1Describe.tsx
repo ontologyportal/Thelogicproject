@@ -95,7 +95,7 @@ export function P1DescribeScreen({
           {/* Main multimodal input */}
           <div className="mb-4">
             <label className="text-[11px] uppercase tracking-wider text-[#717182] mb-2 block">
-              Describe the concept in your own words
+              Tell us about something you want to add to the knowledge base.
             </label>
             <textarea
               value={description}

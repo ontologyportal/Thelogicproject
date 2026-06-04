@@ -65,7 +65,7 @@ export function SplashScreen({
                     : "bg-blue-500/20 text-blue-400/50 cursor-not-allowed"
                 }`}
               >
-                Describe your world <ChevronRight className="size-4" />
+                Start contributing <ChevronRight className="size-4" />
               </button>
             </div>
             {/* Auth row */}
