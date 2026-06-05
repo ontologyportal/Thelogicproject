@@ -603,9 +603,11 @@ export function P6StatementsScreen({
 export function P7VerifyScreen({
   onNext,
   onBack,
+  onSimulateConflict,
 }: {
   onNext: () => void;
   onBack?: () => void;
+  onSimulateConflict?: () => void;
 }) {
   const [gatesComplete, setGatesComplete] = useState(false);
   const [devView, setDevView] = useState(false);
@@ -699,6 +701,18 @@ export function P7VerifyScreen({
               </button>
             </div>
           </div>
+
+          {/* Dev-only: simulate conflict flow without rigging gate failure */}
+          {devView && onSimulateConflict && (
+            <div className="mt-4 flex justify-end">
+              <button
+                onClick={onSimulateConflict}
+                className="text-[10px] text-[#555] hover:text-[#717182] transition-colors"
+              >
+                Simulate consistency conflict →
+              </button>
+            </div>
+          )}
         </Frame>
 
         <AppFooter />

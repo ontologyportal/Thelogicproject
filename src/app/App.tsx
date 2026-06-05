@@ -13,6 +13,10 @@ import {
   P7VerifyScreen,
   SubmitScreen,
 } from "./components/logic/screens";
+import {
+  ConflictResolutionScreen,
+  DisputeSubmittedScreen,
+} from "./components/logic/screens/ConflictResolution";
 
 /**
  * The Logic Project - Build A (Production App)
@@ -34,6 +38,9 @@ export default function App() {
   const [p1Description, setP1Description] = useState("");
   const [p1Scenario, setP1Scenario] = useState("");
   const [proposedParent] = useState("your category");
+
+  // Conflict resolution sub-state
+  const [disputeOpen, setDisputeOpen] = useState(false);
   const [p3Answers, setP3Answers] = useState<string[]>([]);
   const [p4Answers, setP4Answers] = useState<string[]>([]);
   const [p4Elaboration, setP4Elaboration] = useState("");
@@ -153,6 +160,22 @@ export default function App() {
           <P7VerifyScreen
             onNext={() => navigate("submit")}
             onBack={() => navigate("p6-statements")}
+            onSimulateConflict={() => navigate("conflict-resolution")}
+          />
+        );
+
+      case "conflict-resolution":
+        return disputeOpen ? (
+          <DisputeSubmittedScreen
+            onVerify={() => { navigate("p7-verify"); setDisputeOpen(false); }}
+            onBack={() => setDisputeOpen(false)}
+            termName={autoTitle || "[YourConcept]"}
+          />
+        ) : (
+          <ConflictResolutionScreen
+            onRevise={() => navigate("p6-statements")}
+            onDispute={() => setDisputeOpen(true)}
+            termName={autoTitle || "[YourConcept]"}
           />
         );
 

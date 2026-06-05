@@ -237,6 +237,7 @@ export const PHASES = [
   { id: "p5-define", label: "P5 Define" },
   { id: "p6-statements", label: "P6 Statements" },
   { id: "p7-verify", label: "P7 Verify" },
+  { id: "conflict-resolution", label: "Conflict Resolution" },
   { id: "submit", label: "Submit" },
 ] as const;
 
