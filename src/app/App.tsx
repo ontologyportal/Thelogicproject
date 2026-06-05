@@ -33,6 +33,7 @@ export default function App() {
   // Lifted phase state — persists when user navigates back
   const [p1Description, setP1Description] = useState("");
   const [p1Scenario, setP1Scenario] = useState("");
+  const [proposedParent] = useState("your category");
   const [p3Answers, setP3Answers] = useState<string[]>([]);
   const [p4Answers, setP4Answers] = useState<string[]>([]);
   const [p4Elaboration, setP4Elaboration] = useState("");
@@ -124,6 +125,8 @@ export default function App() {
             onAnswersChange={setP4Answers}
             elaboration={p4Elaboration}
             onElaborationChange={setP4Elaboration}
+            termName={autoTitle || "[unnamed concept]"}
+            proposedParent={proposedParent}
           />
         );
 

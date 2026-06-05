@@ -24,6 +24,8 @@ export function P4PlaceScreen({
   onAnswersChange,
   elaboration,
   onElaborationChange,
+  termName,
+  proposedParent,
 }: {
   onNext: () => void;
   onBack?: () => void;
@@ -31,6 +33,8 @@ export function P4PlaceScreen({
   onAnswersChange: (answers: string[]) => void;
   elaboration: string;
   onElaborationChange: (text: string) => void;
+  termName: string;
+  proposedParent: string;
 }) {
   const questions = PLACE_QUESTIONS;
   const [currentCard, setCurrentCard] = useState(() => Math.min(answers.length, questions.length));
@@ -149,14 +153,14 @@ export function P4PlaceScreen({
               <div className="mb-4 p-3 bg-[#1a1a26] border border-[#2a2a3a] rounded-lg">
                 <p className="text-[11px] mb-2 text-[#a0a0b0]">Preview hierarchy:</p>
                 <p className="text-[12px] text-[#c0c0c8] font-mono">
-                  Entity → PhysicalObject → <span className="text-[#a0a0b0]">[GenericParent]</span> → <span className="underline text-blue-400">[YourConcept]</span>
+                  Entity → PhysicalObject → <span className="text-[#a0a0b0]">{proposedParent}</span> → <span className="underline text-blue-400">{termName}</span>
                 </p>
               </div>
 
               {/* Elaboration prompt with multimodal input */}
               <div className="mb-4">
                 <label className="text-[12px] text-[#c0c0c8] mb-3 block leading-relaxed">
-                  How is [your term] more specific than [proposed parent]? Can you give an example where they would differ?
+                  How is {termName} more specific than {proposedParent}? Can you give an example where they would differ?
                 </label>
                 <RefineBox
                   value={elaboration}
