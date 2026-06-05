@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useState, useEffect, useRef } from "react";
 import { Mic, MessagesSquare, ImageIcon, Upload, Send, HelpCircle } from "lucide-react";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
@@ -33,6 +33,8 @@ export function Frame({
  * RefineBox — multimodal input component
  * Hi-fi dark mode design
  */
+type RefineState = "idle" | "refining" | "success";
+
 export function RefineBox({
   value = "",
   onChange,
@@ -54,60 +56,125 @@ export function RefineBox({
   placeholder?: string;
   rows?: number;
 }) {
+  const [refineState, setRefineState] = useState<RefineState>("idle");
+  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  useEffect(() => {
+    return () => { timersRef.current.forEach(clearTimeout); };
+  }, []);
+
+  const hasContent = value.trim().length > 0;
+  const canRefine = hasContent && refineState === "idle";
+
+  const handleRefine = () => {
+    if (!canRefine) return;
+    onSend?.();
+    setRefineState("refining");
+    const t1 = setTimeout(() => {
+      setRefineState("success");
+      const t2 = setTimeout(() => setRefineState("idle"), 2000);
+      timersRef.current.push(t2);
+    }, 1200);
+    timersRef.current.push(t1);
+  };
+
+  const showBanner = refineState !== "idle";
+
   return (
-    <div className="bg-[#1a1a26] border border-[#2a2a3a] rounded-lg p-3 flex items-center gap-2">
-      <Textarea
-        value={value}
-        onChange={(e) => onChange?.(e.target.value)}
-        placeholder={placeholder}
-        rows={rows}
-        className="flex-1 border-none bg-transparent resize-none focus-visible:ring-0 focus-visible:ring-offset-0 text-[13px] text-[#e0e0e8] placeholder:text-[#555]"
-      />
-      <div className="flex items-center gap-1 flex-shrink-0">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-8 text-[#a0a0b0] hover:bg-white/5"
-          title="Voice input"
-          onClick={onMicClick}
-        >
-          <Mic className="size-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-8 text-[#a0a0b0] hover:bg-white/5"
-          title="Talk with AI"
-          onClick={onLinkClick}
-        >
-          <MessagesSquare className="size-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-8 text-[#a0a0b0] hover:bg-white/5"
-          title="Upload file"
-          onClick={onUploadClick}
-        >
-          <Upload className="size-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-8 text-[#a0a0b0] hover:bg-white/5"
-          title="Upload image"
-          onClick={onImageClick}
-        >
-          <ImageIcon className="size-4" />
-        </Button>
-        <Button
-          size="icon"
-          className="size-8 bg-blue-500 hover:bg-blue-600"
-          onClick={onSend}
-          title="Send"
-        >
-          <Send className="size-3.5" />
-        </Button>
+    <div className="bg-[#1a1a26] border border-[#2a2a3a] rounded-lg p-3">
+      <div className="flex items-center gap-2">
+        <Textarea
+          value={value}
+          onChange={(e) => onChange?.(e.target.value)}
+          placeholder={placeholder}
+          rows={rows}
+          className="flex-1 border-none bg-transparent resize-none focus-visible:ring-0 focus-visible:ring-offset-0 text-[13px] text-[#e0e0e8] placeholder:text-[#555]"
+        />
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8 text-[#a0a0b0] hover:bg-white/5"
+            title="Voice input"
+            onClick={onMicClick}
+          >
+            <Mic className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8 text-[#a0a0b0] hover:bg-white/5"
+            title="Talk with AI"
+            onClick={onLinkClick}
+          >
+            <MessagesSquare className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8 text-[#a0a0b0] hover:bg-white/5"
+            title="Upload file"
+            onClick={onUploadClick}
+          >
+            <Upload className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8 text-[#a0a0b0] hover:bg-white/5"
+            title="Upload image"
+            onClick={onImageClick}
+          >
+            <ImageIcon className="size-4" />
+          </Button>
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                {/* span wrapper so tooltip fires even when button is disabled */}
+                <span>
+                  <button
+                    onClick={handleRefine}
+                    disabled={!canRefine}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium transition-colors ${
+                      canRefine
+                        ? "bg-blue-500 hover:bg-blue-600 text-white cursor-pointer"
+                        : "bg-blue-500/20 text-blue-400/50 cursor-not-allowed"
+                    }`}
+                  >
+                    <Send className="size-3" />
+                    Refine →
+                  </button>
+                </span>
+              </TooltipTrigger>
+              {!hasContent && (
+                <TooltipContent>
+                  <p className="text-xs max-w-[220px]">
+                    Type a refinement or add an image, file, or voice note first.
+                  </p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      </div>
+
+      {/* Status banner */}
+      <div
+        className={`transition-opacity duration-300 ${showBanner ? "opacity-100 mt-2" : "opacity-0 pointer-events-none h-0 mt-0 overflow-hidden"}`}
+      >
+        {refineState === "refining" && (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-blue-500/10 border border-blue-500/20">
+            <span className="inline-block animate-spin text-blue-400 text-[13px]">↻</span>
+            <span className="text-[11px] text-blue-300">Regenerating based on your refinement…</span>
+          </div>
+        )}
+        {refineState === "success" && (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-emerald-500/10 border border-emerald-500/20">
+            <span className="text-emerald-400 text-[13px]">✓</span>
+            <span className="text-[11px] text-emerald-300">Updated. The next phase has been refined based on your input.</span>
+          </div>
+        )}
       </div>
     </div>
   );
