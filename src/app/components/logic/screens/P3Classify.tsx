@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Frame, AppFooter } from "../shared";
 import { FooterNavigation } from "../Navigation";
 
@@ -19,6 +19,7 @@ export function P3ClassifyScreen({
   const [currentCard, setCurrentCard] = useState(0);
   const [answers, setAnswers] = useState<Array<string>>([]);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const advanceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const questions: QuestionType[] = [
     { type: "yes-no", question: "Is this something physical you can touch?" },
@@ -27,24 +28,35 @@ export function P3ClassifyScreen({
   ];
 
   const handleAnswer = (answer: string) => {
-    // Radio-style: allow changing selection before advancing
-    setSelectedAnswer(answer);
-  };
-
-  const handleConfirmAnswer = () => {
-    if (selectedAnswer === null) return;
-
-    const newAnswers = [...answers];
-    newAnswers[currentCard] = selectedAnswer;
-    setAnswers(newAnswers);
-    setSelectedAnswer(null);
-
-    if (currentCard < questions.length - 1) {
-      setTimeout(() => {
-        setCurrentCard(currentCard + 1);
-      }, 300);
+    // Clear any existing timer if user changes selection
+    if (advanceTimerRef.current) {
+      clearTimeout(advanceTimerRef.current);
     }
+
+    // Update selection
+    setSelectedAnswer(answer);
+
+    // Start 700ms auto-advance timer
+    advanceTimerRef.current = setTimeout(() => {
+      const newAnswers = [...answers];
+      newAnswers[currentCard] = answer;
+      setAnswers(newAnswers);
+      setSelectedAnswer(null);
+
+      if (currentCard < questions.length - 1) {
+        setCurrentCard(currentCard + 1);
+      }
+    }, 700);
   };
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (advanceTimerRef.current) {
+        clearTimeout(advanceTimerRef.current);
+      }
+    };
+  }, []);
 
   const canAdvance = answers.length === questions.length;
 
@@ -129,14 +141,6 @@ export function P3ClassifyScreen({
                             {q.options[1]}
                           </button>
                         </div>
-                      )}
-                      {selectedAnswer && (
-                        <button
-                          onClick={handleConfirmAnswer}
-                          className="w-full mt-2 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-md text-[12px] text-white"
-                        >
-                          Confirm and continue
-                        </button>
                       )}
                     </>
                   ) : (
