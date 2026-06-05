@@ -33,12 +33,13 @@ export function SplashScreen({
   };
 
   const handleCTAClick = () => {
-    if (authStatus !== "none") {
-      onStart();
+    // If user hasn't made an explicit auth choice, default to guest mode
+    if (authStatus === "none") {
+      setAuthStatus("guest");
+      onAuthChange("guest");
     }
+    onStart();
   };
-
-  const ctaEnabled = authStatus !== "none";
 
   return (
     <div className="h-full flex flex-col bg-[#0a0a14] text-[#e0e0e8]">
@@ -58,12 +59,7 @@ export function SplashScreen({
             <div className="flex items-center gap-3 mb-4">
               <button
                 onClick={handleCTAClick}
-                disabled={!ctaEnabled}
-                className={`px-5 py-3 rounded-lg text-[13px] text-white flex items-center gap-2 shadow-lg ${
-                  ctaEnabled
-                    ? "bg-blue-500 hover:bg-blue-600 shadow-blue-500/20"
-                    : "bg-blue-500/20 text-blue-400/50 cursor-not-allowed"
-                }`}
+                className="px-5 py-3 rounded-lg text-[13px] text-white flex items-center gap-2 shadow-lg bg-blue-500 hover:bg-blue-600 shadow-blue-500/20"
               >
                 Start contributing <ChevronRight className="size-4" />
               </button>
@@ -92,11 +88,6 @@ export function SplashScreen({
               <div className="flex items-center gap-2"><Eye className="size-3.5 text-emerald-400" /> Every claim traceable to a source</div>
               <div className="flex items-center gap-2"><ShieldCheck className="size-3.5 text-purple-400" /> Mechanically provable consistency</div>
             </div>
-            {!ctaEnabled && (
-              <div className="mt-6 text-[11px] text-amber-400">
-                ↑ Sign in or continue as guest to begin
-              </div>
-            )}
           </div>
         </div>
 

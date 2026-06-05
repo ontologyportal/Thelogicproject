@@ -100,7 +100,7 @@ export function P1DescribeScreen({
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe the concept in your own words. You can upload an image, drop a link, or just type a stream of consciousness."
+              placeholder="Tell us about something you want to add to the knowledge base. You can upload an image, drop a link, or just type out a stream of consciousness."
               rows={7}
               className="w-full bg-[#1a1a26] border border-[#2a2a3a] rounded-lg px-4 py-3 text-[13px] leading-relaxed outline-none resize-none focus:border-blue-500/40 placeholder:text-[#555]"
             />

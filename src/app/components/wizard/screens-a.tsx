@@ -32,7 +32,7 @@ export function ScreenLanding({ go }: { go: (k: string) => void }) {
             </p>
             <div className="flex items-center gap-3 mb-4">
               <button onClick={() => go("describe")} className="px-5 py-3 bg-blue-500 hover:bg-blue-600 rounded-lg text-[13px] text-white flex items-center gap-2 shadow-lg shadow-blue-500/20">
-                Describe your world <ArrowRight className="size-4" />
+                Start contributing <ArrowRight className="size-4" />
               </button>
             </div>
             {/* Auth row — both paths first-class, neither gates the experience */}
