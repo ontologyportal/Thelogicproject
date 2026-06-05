@@ -209,6 +209,36 @@ export function Plain({ children }: { children: ReactNode }) {
 }
 
 /**
+ * AISuggestionBadge — small source tag for AI-generated content.
+ * "default": generic suggestion label.
+ * "inference": used when the value is extrapolated from user input (more aggressive framing).
+ */
+export function AISuggestionBadge({ variant = "default" }: { variant?: "default" | "inference" }) {
+  const label =
+    variant === "inference"
+      ? "ai inference from your description"
+      : "ai suggestion · review required";
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-blue-400 cursor-default select-none">
+            <span aria-hidden>✨</span> {label}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent className="max-w-xs">
+          <p className="text-xs leading-relaxed">
+            These values were inferred by the AI from your input. Review and edit
+            before approving — the system will not commit them without your
+            confirmation.
+          </p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
+/**
  * Tooltip wrapper for gate/help explanations
  */
 export function HelpTooltip({ content, children }: { content: string; children: ReactNode }) {

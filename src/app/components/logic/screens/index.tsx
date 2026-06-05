@@ -5,7 +5,7 @@ export { P2SearchScreen } from "./P2Search";
 export { P2SharpenScreen } from "./P2Sharpen";
 export { P3ClassifyScreen } from "./P3Classify";
 
-import { Frame, RefineBox, AppFooter } from "../shared";
+import { Frame, RefineBox, AppFooter, AISuggestionBadge } from "../shared";
 import { FooterNavigation } from "../Navigation";
 import { useState, useEffect, useRef } from "react";
 import confetti from "canvas-confetti";
@@ -279,6 +279,9 @@ export function P5DefineScreen({
 
             return (
               <div key={idx} className="mb-4 p-3 bg-[#1a1a26] border border-[#2a2a3a] rounded-lg">
+                <div className="mb-1.5">
+                  <AISuggestionBadge variant={idx === 2 ? "inference" : "default"} />
+                </div>
                 <label className="text-[10px] uppercase tracking-wider text-[#717182] mb-1 block">
                   {field.label}
                   <span className="text-[10px] text-[#555] normal-case ml-1">({field.gloss})</span>
@@ -507,6 +510,7 @@ export function P6StatementsScreen({
                   : "bg-[#1a1a26] border border-[#2a2a3a]"
               }`}
             >
+              <div className="mb-1.5"><AISuggestionBadge /></div>
               <p className="text-[12px] text-[#c0c0c8] mb-2">{statement.text}</p>
               <div className="flex gap-2">
                 <button
@@ -899,6 +903,7 @@ export function SubmitScreen({
 
           {/* Suggested next term — unchanged */}
           <div className="mb-4 p-3 bg-[#1a1a26] border border-[#2a2a3a] rounded-lg">
+            <div className="mb-2"><AISuggestionBadge /></div>
             <label className="text-[11px] uppercase tracking-wider text-[#717182] mb-2 block">
               Suggested next term (also missing from the knowledge base):
             </label>

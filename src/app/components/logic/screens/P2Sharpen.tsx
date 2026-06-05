@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Frame, RefineBox, AppFooter } from "../shared";
+import { Frame, RefineBox, AppFooter, AISuggestionBadge } from "../shared";
 import { FooterNavigation } from "../Navigation";
 
 /**
@@ -53,6 +53,7 @@ export function P2SharpenScreen({
             <>
               {/* "We think you mean..." card */}
               <div className="mb-4 p-4 rounded-lg border border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-amber-500/5">
+                <div className="mb-2"><AISuggestionBadge /></div>
                 <h3 className="text-[13px] font-medium mb-2 text-amber-400">We think you mean…</h3>
                 <p className="text-[12px] text-[#c0c0c8] mb-3">
                   [YourConcept] in the sense of a generic category.
@@ -170,6 +171,7 @@ export function P2SharpenScreen({
 
               {/* Distinguish from neighbors */}
               <div className="mb-4 p-3 bg-[#1a1a26] border border-[#2a2a3a] rounded-lg">
+                <div className="mb-2"><AISuggestionBadge /></div>
                 <p className="text-[11px] text-[#c0c0c8]">
                   <strong className="text-[#e0e0e8]">vs RelatedConcept1:</strong> yours has property X
                 </p>
