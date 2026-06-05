@@ -178,11 +178,27 @@ export function P2SharpenScreen({
                 </p>
               </div>
 
-              {/* Create New CTA */}
-              <div className="mb-4 p-4 bg-gradient-to-br from-blue-500/15 to-blue-500/5 border-2 border-blue-500/40 rounded-lg">
+              {/* Primary Continue — only when a sense option is selected */}
+              {selectedSocraticOption && (
+                <div className="mb-3 p-4 bg-gradient-to-br from-blue-500/15 to-blue-500/5 border-2 border-blue-500/40 rounded-lg">
+                  <button
+                    onClick={() => onNext(state)}
+                    className="w-full py-3 bg-blue-500 hover:bg-blue-600 rounded-lg text-[13px] text-white font-medium"
+                  >
+                    Continue →
+                  </button>
+                </div>
+              )}
+
+              {/* Escape CTA — prominent when no option selected, subordinated after */}
+              <div className="mb-4">
                 <button
                   onClick={() => setState("new")}
-                  className="w-full py-3 bg-blue-500 hover:bg-blue-600 rounded-lg text-[13px] text-white font-medium"
+                  className={`w-full py-3 rounded-lg text-[13px] font-medium transition-colors ${
+                    selectedSocraticOption
+                      ? "bg-transparent border border-[#2a2a3a] text-[#717182] hover:border-[#3a3a4a] hover:text-[#a0a0b0]"
+                      : "bg-blue-500 hover:bg-blue-600 text-white"
+                  }`}
                 >
                   None of these fit. Let me describe the sense in my own words.
                 </button>
