@@ -5,6 +5,10 @@ import { FooterNavigation } from "../Navigation";
 /**
  * Phase 3: Classify the Concept - Hi-fi dark mode
  */
+type QuestionType =
+  | { type: "yes-no"; question: string }
+  | { type: "choice"; question: string; options: [string, string] };
+
 export function P3ClassifyScreen({
   onNext,
   onBack,
@@ -13,17 +17,27 @@ export function P3ClassifyScreen({
   onBack?: () => void;
 }) {
   const [currentCard, setCurrentCard] = useState(0);
-  const [answers, setAnswers] = useState<Array<"yes" | "no">>([]);
+  const [answers, setAnswers] = useState<Array<string>>([]);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
 
-  const questions = [
-    "Is this something physical you can touch?",
-    "Does it happen over a period of time?",
-    "Are there many examples of it, or is it one specific thing?",
+  const questions: QuestionType[] = [
+    { type: "yes-no", question: "Is this something physical you can touch?" },
+    { type: "yes-no", question: "Does it happen over a period of time?" },
+    { type: "choice", question: "Which best describes this concept?", options: ["Many examples", "One specific thing"] },
   ];
 
-  const handleAnswer = (answer: "yes" | "no") => {
-    const newAnswers = [...answers, answer];
+  const handleAnswer = (answer: string) => {
+    // Radio-style: allow changing selection before advancing
+    setSelectedAnswer(answer);
+  };
+
+  const handleConfirmAnswer = () => {
+    if (selectedAnswer === null) return;
+
+    const newAnswers = [...answers];
+    newAnswers[currentCard] = selectedAnswer;
     setAnswers(newAnswers);
+    setSelectedAnswer(null);
 
     if (currentCard < questions.length - 1) {
       setTimeout(() => {
@@ -43,10 +57,11 @@ export function P3ClassifyScreen({
         >
           {/* Chatbot card sequence */}
           <div className="space-y-3 mb-6">
-            {questions.map((question, idx) => {
+            {questions.map((q, idx) => {
               const isWaiting = idx > currentCard;
               const isCurrent = idx === currentCard;
               const isDone = idx < currentCard;
+              const question = q.type === "yes-no" ? q.question : q.question;
 
               return (
                 <div
@@ -68,20 +83,61 @@ export function P3ClassifyScreen({
                       <p className="text-[15px] mb-4 text-[#e0e0e8]">
                         {question}
                       </p>
-                      <div className="flex gap-2">
+                      {q.type === "yes-no" ? (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleAnswer("yes")}
+                            className={`flex-1 py-2 rounded-md text-[12px] border transition-colors ${
+                              selectedAnswer === "yes"
+                                ? "bg-blue-500 border-blue-500 text-white"
+                                : "bg-[#1a1a26] border-[#2a2a3a] text-[#a0a0b0] hover:border-[#3a3a4a]"
+                            }`}
+                          >
+                            Yes
+                          </button>
+                          <button
+                            onClick={() => handleAnswer("no")}
+                            className={`flex-1 py-2 rounded-md text-[12px] border transition-colors ${
+                              selectedAnswer === "no"
+                                ? "bg-blue-500 border-blue-500 text-white"
+                                : "bg-[#1a1a26] border-[#2a2a3a] text-[#a0a0b0] hover:border-[#3a3a4a]"
+                            }`}
+                          >
+                            No
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleAnswer(q.options[0])}
+                            className={`flex-1 py-2 rounded-md text-[12px] border transition-colors ${
+                              selectedAnswer === q.options[0]
+                                ? "bg-blue-500 border-blue-500 text-white"
+                                : "bg-[#1a1a26] border-[#2a2a3a] text-[#a0a0b0] hover:border-[#3a3a4a]"
+                            }`}
+                          >
+                            {q.options[0]}
+                          </button>
+                          <button
+                            onClick={() => handleAnswer(q.options[1])}
+                            className={`flex-1 py-2 rounded-md text-[12px] border transition-colors ${
+                              selectedAnswer === q.options[1]
+                                ? "bg-blue-500 border-blue-500 text-white"
+                                : "bg-[#1a1a26] border-[#2a2a3a] text-[#a0a0b0] hover:border-[#3a3a4a]"
+                            }`}
+                          >
+                            {q.options[1]}
+                          </button>
+                        </div>
+                      )}
+                      {selectedAnswer && (
                         <button
-                          onClick={() => handleAnswer("yes")}
-                          className="flex-1 py-2 bg-blue-500 hover:bg-blue-600 rounded-md text-[12px] text-white"
+                          onClick={handleConfirmAnswer}
+                          className="w-full mt-2 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-md text-[12px] text-white"
                         >
-                          Yes
+                          Confirm and continue
                         </button>
-                        <button
-                          onClick={() => handleAnswer("no")}
-                          className="flex-1 py-2 bg-[#1a1a26] border border-[#2a2a3a] hover:border-[#3a3a4a] rounded-md text-[12px] text-[#a0a0b0]"
-                        >
-                          No
-                        </button>
-                      </div>
+                      )}
                     </>
                   ) : (
                     <p className="text-[12px] text-[#717182]">{question}</p>
@@ -94,7 +150,7 @@ export function P3ClassifyScreen({
           {/* Progress indicator */}
           <div className="p-3 bg-[#1a1a26] border border-[#2a2a3a] rounded-lg text-center">
             <div className="flex justify-center gap-2 mb-2">
-              {[0, 1, 2].map((i) => (
+              {questions.map((_, i) => (
                 <div
                   key={i}
                   className={`size-2 rounded-full ${
@@ -108,7 +164,7 @@ export function P3ClassifyScreen({
             </div>
             <p className="text-[12px] text-[#c0c0c8]">Narrowing down the definition…</p>
             <p className="text-[10px] text-[#717182] mt-1">
-              Progress: {answers.length} / {questions.length}
+              Progress: {Math.min(answers.length, questions.length)} / {questions.length}
             </p>
           </div>
         </Frame>

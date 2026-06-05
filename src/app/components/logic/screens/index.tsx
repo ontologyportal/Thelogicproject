@@ -20,7 +20,8 @@ export function P4PlaceScreen({
   onBack?: () => void;
 }) {
   const [currentCard, setCurrentCard] = useState(0);
-  const [answers, setAnswers] = useState<Array<"yes" | "no">>([]);
+  const [answers, setAnswers] = useState<Array<string>>([]);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [elaboration, setElaboration] = useState("");
   const [demoModal, setDemoModal] = useState<string | null>(null);
 
@@ -36,9 +37,18 @@ export function P4PlaceScreen({
     "Is it created by an organization or authority?",
   ];
 
-  const handleAnswer = (answer: "yes" | "no") => {
-    const newAnswers = [...answers, answer];
+  const handleAnswer = (answer: string) => {
+    // Radio-style: allow changing selection before advancing
+    setSelectedAnswer(answer);
+  };
+
+  const handleConfirmAnswer = () => {
+    if (selectedAnswer === null) return;
+
+    const newAnswers = [...answers];
+    newAnswers[currentCard] = selectedAnswer;
     setAnswers(newAnswers);
+    setSelectedAnswer(null);
 
     if (currentCard < questions.length - 1) {
       setTimeout(() => {
@@ -86,17 +96,33 @@ export function P4PlaceScreen({
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleAnswer("yes")}
-                          className="flex-1 py-2 bg-blue-500 hover:bg-blue-600 rounded-md text-[12px] text-white"
+                          className={`flex-1 py-2 rounded-md text-[12px] border transition-colors ${
+                            selectedAnswer === "yes"
+                              ? "bg-blue-500 border-blue-500 text-white"
+                              : "bg-[#1a1a26] border-[#2a2a3a] text-[#a0a0b0] hover:border-[#3a3a4a]"
+                          }`}
                         >
                           Yes
                         </button>
                         <button
                           onClick={() => handleAnswer("no")}
-                          className="flex-1 py-2 bg-[#1a1a26] border border-[#2a2a3a] hover:border-[#3a3a4a] rounded-md text-[12px] text-[#a0a0b0]"
+                          className={`flex-1 py-2 rounded-md text-[12px] border transition-colors ${
+                            selectedAnswer === "no"
+                              ? "bg-blue-500 border-blue-500 text-white"
+                              : "bg-[#1a1a26] border-[#2a2a3a] text-[#a0a0b0] hover:border-[#3a3a4a]"
+                          }`}
                         >
                           No
                         </button>
                       </div>
+                      {selectedAnswer && (
+                        <button
+                          onClick={handleConfirmAnswer}
+                          className="w-full mt-2 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-md text-[12px] text-white"
+                        >
+                          Confirm and continue
+                        </button>
+                      )}
                     </>
                   ) : (
                     <p className="text-[12px] text-[#717182]">{question}</p>
