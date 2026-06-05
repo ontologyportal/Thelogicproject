@@ -158,7 +158,11 @@ export default function App() {
 
       case "submit":
         return (
-          <SubmitScreen onRestart={() => navigate("p1-describe")} />
+          <SubmitScreen
+            onRestart={() => navigate("p1-describe")}
+            termName={autoTitle || "[YourConcept]"}
+            proposedParent={proposedParent}
+          />
         );
 
       default:

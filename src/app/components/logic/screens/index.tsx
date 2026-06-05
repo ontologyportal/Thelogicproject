@@ -8,6 +8,9 @@ export { P3ClassifyScreen } from "./P3Classify";
 import { Frame, RefineBox, AppFooter } from "../shared";
 import { FooterNavigation } from "../Navigation";
 import { useState, useEffect, useRef } from "react";
+import confetti from "canvas-confetti";
+import { motion } from "motion/react";
+import { Copy, Twitter, Link } from "lucide-react";
 
 const PLACE_QUESTIONS = [
   "Can you buy or sell it?",
@@ -758,9 +761,51 @@ export function P7VerifyScreen({
  */
 export function SubmitScreen({
   onRestart,
+  termName = "[YourConcept]",
+  proposedParent = "your category",
 }: {
   onRestart: () => void;
+  termName?: string;
+  proposedParent?: string;
 }) {
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedMd, setCopiedMd] = useState(false);
+  const copyTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  useEffect(() => {
+    const burst = {
+      origin: { x: 0.5, y: 0.7 },
+      spread: 70,
+      colors: ["#10b981", "#3b82f6", "#f59e0b"],
+    };
+    confetti({ ...burst, particleCount: 80 });
+    const t = setTimeout(() => confetti({ ...burst, particleCount: 50 }), 400);
+    return () => {
+      clearTimeout(t);
+      copyTimersRef.current.forEach(clearTimeout);
+    };
+  }, []);
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText("https://logicproject.org/contribute");
+    setCopiedLink(true);
+    const t = setTimeout(() => setCopiedLink(false), 1500);
+    copyTimersRef.current.push(t);
+  };
+
+  const handleCopyMd = () => {
+    navigator.clipboard.writeText(
+      `[I contributed to The Logic Project](https://logicproject.org/contribute)`
+    );
+    setCopiedMd(true);
+    const t = setTimeout(() => setCopiedMd(false), 1500);
+    copyTimersRef.current.push(t);
+  };
+
+  const tweetText = encodeURIComponent(
+    "Just contributed to The Logic Project — an open knowledge base anyone can use to reason about the world"
+  );
+
   return (
     <div className="h-full flex flex-col bg-[#13131c] text-[#e0e0e8]">
       <div className="flex-1 overflow-auto">
@@ -768,13 +813,77 @@ export function SubmitScreen({
           title="Term submitted. Contribute another?"
           subtitle="your contribution is on its way"
         >
-          <div className="mb-6 p-4 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/30 rounded-lg text-center">
-            <p className="text-[16px] mb-1 text-emerald-400">🎉 PR #[NNN] opened · [YourConcept]</p>
+          {/* Summary card */}
+          <div className="mb-6 p-5 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/30 rounded-lg animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="flex items-center gap-2 mb-4">
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: [0, 1.2, 1] }}
+                transition={{ duration: 0.5, times: [0, 0.6, 1], ease: "easeOut" }}
+                className="text-[22px] inline-block"
+              >
+                🎉
+              </motion.span>
+              <h3 className="text-[16px] font-medium text-emerald-400">Your contribution is on its way</h3>
+            </div>
+
+            <div className="space-y-2 mb-4">
+              <div className="flex items-baseline gap-3">
+                <span className="text-[10px] uppercase tracking-wider text-[#717182] w-28 flex-shrink-0">Term</span>
+                <span className="text-[13px] font-mono text-[#e0e0e8]">{termName}</span>
+              </div>
+              <div className="flex items-baseline gap-3">
+                <span className="text-[10px] uppercase tracking-wider text-[#717182] w-28 flex-shrink-0">Parent class</span>
+                <span className="text-[13px] text-[#c0c0c8]">{proposedParent}</span>
+              </div>
+              <div className="flex items-baseline gap-3">
+                <span className="text-[10px] uppercase tracking-wider text-[#717182] w-28 flex-shrink-0">Statements</span>
+                <span className="text-[13px] text-[#c0c0c8]">3 statements added</span>
+              </div>
+            </div>
+
             <p className="text-[11px] text-[#717182]">
-              Guest? routed to staging queue. Signed in? PR opened on your fork.
+              PR #[NNN] · Guest? routed to staging queue. Signed in? PR opened on your fork.
             </p>
           </div>
 
+          {/* Share row */}
+          <div className="mb-4 p-3 bg-[#1a1a26] border border-[#2a2a3a] rounded-lg">
+            <p className="text-[10px] uppercase tracking-wider text-[#717182] mb-3">Share your contribution</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={handleCopyLink}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[#2a2a3a] text-[11px] text-[#a0a0b0] hover:border-[#3a3a4a] hover:text-white transition-colors"
+              >
+                <Copy className="size-3" />
+                Copy link
+                {copiedLink && (
+                  <span className="ml-1 text-emerald-400 animate-in fade-in duration-200">Copied</span>
+                )}
+              </button>
+
+              <button
+                onClick={() => window.open(`https://twitter.com/intent/tweet?text=${tweetText}`, "_blank", "noopener,noreferrer")}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[#2a2a3a] text-[11px] text-[#a0a0b0] hover:border-[#3a3a4a] hover:text-white transition-colors"
+              >
+                <Twitter className="size-3" />
+                Share on X
+              </button>
+
+              <button
+                onClick={handleCopyMd}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[#2a2a3a] text-[11px] text-[#a0a0b0] hover:border-[#3a3a4a] hover:text-white transition-colors"
+              >
+                <Link className="size-3" />
+                Copy markdown
+                {copiedMd && (
+                  <span className="ml-1 text-emerald-400 animate-in fade-in duration-200">Copied</span>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Suggested next term — unchanged */}
           <div className="mb-4 p-3 bg-[#1a1a26] border border-[#2a2a3a] rounded-lg">
             <label className="text-[11px] uppercase tracking-wider text-[#717182] mb-2 block">
               Suggested next term (also missing from the knowledge base):
@@ -789,6 +898,7 @@ export function SubmitScreen({
             </div>
           </div>
 
+          {/* Action buttons — unchanged */}
           <div className="flex gap-2">
             <button
               onClick={onRestart}
