@@ -36,6 +36,11 @@ export default function App() {
     scenario: "",
   });
 
+  // Lifted phase state — persists when user navigates back
+  const [p3Answers, setP3Answers] = useState<string[]>([]);
+  const [p4Answers, setP4Answers] = useState<string[]>([]);
+  const [p4Elaboration, setP4Elaboration] = useState("");
+
   const navigateWithTransition = (phase: PhaseId, status: string) => {
     // Mark current phase as completed before transitioning
     if (currentPhase !== "splash" && !completedPhases.includes(currentPhase)) {
@@ -105,6 +110,8 @@ export default function App() {
               navigateWithTransition("p4-place", "Finding parent in hierarchy…");
             }}
             onBack={() => navigate("p2-sharpen")}
+            answers={p3Answers}
+            onAnswersChange={setP3Answers}
           />
         );
 
@@ -113,6 +120,10 @@ export default function App() {
           <P4PlaceScreen
             onNext={() => navigate("p5-define")}
             onBack={() => navigate("p3-classify")}
+            answers={p4Answers}
+            onAnswersChange={setP4Answers}
+            elaboration={p4Elaboration}
+            onElaborationChange={setP4Elaboration}
           />
         );
 

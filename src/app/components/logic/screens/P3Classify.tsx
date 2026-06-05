@@ -9,23 +9,27 @@ type QuestionType =
   | { type: "yes-no"; question: string }
   | { type: "choice"; question: string; options: [string, string] };
 
+const CLASSIFY_QUESTIONS: QuestionType[] = [
+  { type: "yes-no", question: "Is this something physical you can touch?" },
+  { type: "yes-no", question: "Does it happen over a period of time?" },
+  { type: "choice", question: "Which best describes this concept?", options: ["Many examples", "One specific thing"] },
+];
+
 export function P3ClassifyScreen({
   onNext,
   onBack,
+  answers,
+  onAnswersChange,
 }: {
   onNext: () => void;
   onBack?: () => void;
+  answers: string[];
+  onAnswersChange: (answers: string[]) => void;
 }) {
-  const [currentCard, setCurrentCard] = useState(0);
-  const [answers, setAnswers] = useState<Array<string>>([]);
+  const questions = CLASSIFY_QUESTIONS;
+  const [currentCard, setCurrentCard] = useState(() => Math.min(answers.length, questions.length));
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const advanceTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  const questions: QuestionType[] = [
-    { type: "yes-no", question: "Is this something physical you can touch?" },
-    { type: "yes-no", question: "Does it happen over a period of time?" },
-    { type: "choice", question: "Which best describes this concept?", options: ["Many examples", "One specific thing"] },
-  ];
 
   const handleAnswer = (answer: string) => {
     // Clear any existing timer if user changes selection
@@ -40,7 +44,7 @@ export function P3ClassifyScreen({
     advanceTimerRef.current = setTimeout(() => {
       const newAnswers = [...answers];
       newAnswers[currentCard] = answer;
-      setAnswers(newAnswers);
+      onAnswersChange(newAnswers);
       setSelectedAnswer(null);
 
       if (currentCard < questions.length - 1) {

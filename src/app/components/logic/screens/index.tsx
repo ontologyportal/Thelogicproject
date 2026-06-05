@@ -9,20 +9,32 @@ import { Frame, RefineBox, AppFooter } from "../shared";
 import { FooterNavigation } from "../Navigation";
 import { useState, useEffect, useRef } from "react";
 
+const PLACE_QUESTIONS = [
+  "Can you buy or sell it?",
+  "Is it created by an organization or authority?",
+];
+
 /**
  * P4: Find Its Parent - Hi-fi dark mode
  */
 export function P4PlaceScreen({
   onNext,
   onBack,
+  answers,
+  onAnswersChange,
+  elaboration,
+  onElaborationChange,
 }: {
   onNext: () => void;
   onBack?: () => void;
+  answers: string[];
+  onAnswersChange: (answers: string[]) => void;
+  elaboration: string;
+  onElaborationChange: (text: string) => void;
 }) {
-  const [currentCard, setCurrentCard] = useState(0);
-  const [answers, setAnswers] = useState<Array<string>>([]);
+  const questions = PLACE_QUESTIONS;
+  const [currentCard, setCurrentCard] = useState(() => Math.min(answers.length, questions.length));
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  const [elaboration, setElaboration] = useState("");
   const [demoModal, setDemoModal] = useState<string | null>(null);
   const advanceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -32,11 +44,6 @@ export function P4PlaceScreen({
     upload: "File demo: [Demo file uploaded: taxonomy-draft.docx, 1 page. The system has extracted key terms: classification, inheritance, specialization.]",
     link: "Link demo: [Demo URL: ontology-patterns.org/hierarchy-design. The system has parsed the page summary.]",
   };
-
-  const questions = [
-    "Can you buy or sell it?",
-    "Is it created by an organization or authority?",
-  ];
 
   const handleAnswer = (answer: string) => {
     // Clear any existing timer if user changes selection
@@ -51,7 +58,7 @@ export function P4PlaceScreen({
     advanceTimerRef.current = setTimeout(() => {
       const newAnswers = [...answers];
       newAnswers[currentCard] = answer;
-      setAnswers(newAnswers);
+      onAnswersChange(newAnswers);
       setSelectedAnswer(null);
 
       if (currentCard < questions.length - 1) {
@@ -153,7 +160,7 @@ export function P4PlaceScreen({
                 </label>
                 <RefineBox
                   value={elaboration}
-                  onChange={setElaboration}
+                  onChange={onElaborationChange}
                   placeholder="Describe what makes your term more specific..."
                   rows={3}
                   onMicClick={() => setDemoModal("mic")}
