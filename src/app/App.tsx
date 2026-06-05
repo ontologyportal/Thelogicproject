@@ -30,13 +30,9 @@ export default function App() {
     status: "",
   });
 
-  // Session data
-  const [sessionData] = useState({
-    description: "",
-    scenario: "",
-  });
-
   // Lifted phase state — persists when user navigates back
+  const [p1Description, setP1Description] = useState("");
+  const [p1Scenario, setP1Scenario] = useState("");
   const [p3Answers, setP3Answers] = useState<string[]>([]);
   const [p4Answers, setP4Answers] = useState<string[]>([]);
   const [p4Elaboration, setP4Elaboration] = useState("");
@@ -81,6 +77,10 @@ export default function App() {
             }}
             onBack={() => navigate("splash")}
             onAutoTitleChange={setAutoTitle}
+            description={p1Description}
+            onDescriptionChange={setP1Description}
+            scenario={p1Scenario}
+            onScenarioChange={setP1Scenario}
           />
         );
 

@@ -11,13 +11,19 @@ export function P1DescribeScreen({
   onNext,
   onBack,
   onAutoTitleChange,
+  description,
+  onDescriptionChange,
+  scenario,
+  onScenarioChange,
 }: {
   onNext: (data: { description: string; scenario: string }) => void;
   onBack?: () => void;
   onAutoTitleChange?: (title: string) => void;
+  description: string;
+  onDescriptionChange: (s: string) => void;
+  scenario: string;
+  onScenarioChange: (s: string) => void;
 }) {
-  const [description, setDescription] = useState("");
-  const [scenario, setScenario] = useState("");
   const [demoModal, setDemoModal] = useState<string | null>(null);
   const [showTitleHelp, setShowTitleHelp] = useState(false);
 
@@ -41,7 +47,7 @@ export function P1DescribeScreen({
   const handleModalClose = () => {
     if (demoModal) {
       const textToInsert = extractedText[demoModal as keyof typeof extractedText];
-      setDescription(prev => prev ? `${prev}\n\n${textToInsert}` : textToInsert);
+      onDescriptionChange(description ? `${description}\n\n${textToInsert}` : textToInsert);
     }
     setDemoModal(null);
   };
@@ -99,7 +105,7 @@ export function P1DescribeScreen({
             </label>
             <textarea
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => onDescriptionChange(e.target.value)}
               placeholder="Tell us about something you want to add to the knowledge base. You can upload an image, drop a link, or just type out a stream of consciousness."
               rows={7}
               className="w-full bg-[#1a1a26] border border-[#2a2a3a] rounded-lg px-4 py-3 text-[13px] leading-relaxed outline-none resize-none focus:border-blue-500/40 placeholder:text-[#555]"
@@ -197,7 +203,7 @@ export function P1DescribeScreen({
             </label>
             <textarea
               value={scenario}
-              onChange={(e) => setScenario(e.target.value)}
+              onChange={(e) => onScenarioChange(e.target.value)}
               placeholder="If something is a [your concept], then [what should be true]."
               rows={3}
               className="w-full bg-[#1a1a26] border border-[#2a2a3a] rounded-lg px-4 py-3 text-[13px] leading-relaxed outline-none resize-none focus:border-blue-500/40 placeholder:text-[#555]"
