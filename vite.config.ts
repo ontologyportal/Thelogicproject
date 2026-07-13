@@ -17,6 +17,9 @@ function figmaAssetResolver() {
 }
 
 export default defineConfig({
+  // For GitHub Pages project sites the app is served under /<repo>/.
+  // The deploy workflow sets VITE_BASE=/Thelogicproject/; local dev stays at /.
+  base: process.env.VITE_BASE || '/',
   plugins: [
     figmaAssetResolver(),
     // The React and Tailwind plugins are both required for Make, even if

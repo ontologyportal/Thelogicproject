@@ -124,6 +124,17 @@ Build The Logic Project, a guided web application that helps anyone — expert o
   A small "?" tooltip on each gate label opens a one-paragraph plain-English explanation of what the check does and why it matters. Do not show TPTP, FOF,
   THF, or solver names in the gate UI. A "Developer view" toggle on Phase 7 reveals them.
 
+  Backend contract: the five gates above are the user-facing surface of the
+  LLM-agnostic constraint architecture specified at
+  `~/workspace/sumo_business_development_work/wizard-pipeline/constraint-architecture.md`.
+  The React app calls validators through a constraint-layer API that is
+  independent of which LLM provider is bound (Ollama-served open model by
+  default, hosted frontier as optional upgrade). Build A wires the stubbed API
+  to real validators per the connector contract in §2 of that spec; Builds B/C
+  remain canned for usability evaluation. Failure routing on each gate
+  (described in the "Fail behavior" column above) is the user-visible
+  expression of the failure-attribution logic in §6 of the spec.
+
   ---
   4. Jargon Replacement Table (Apply Globally)
 

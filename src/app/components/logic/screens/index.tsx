@@ -11,6 +11,7 @@ import { useState, useEffect, useRef } from "react";
 import confetti from "canvas-confetti";
 import { motion } from "motion/react";
 import { Copy, Twitter, Link } from "lucide-react";
+import { runGates, DEMO_TERM, type Gate, type ProofResult, type Scenario } from "../../../services/api";
 
 const PLACE_QUESTIONS = [
   "Can you buy or sell it?",
@@ -608,31 +609,59 @@ export function P7VerifyScreen({
   onNext,
   onBack,
   onSimulateConflict,
+  formulas = DEMO_TERM.formulas,
+  scenario = DEMO_TERM.scenario,
+  naturalLanguageStatement = DEMO_TERM.naturalLanguage,
+  kifStatement = DEMO_TERM.kif,
+  scenarioNL = DEMO_TERM.scenarioNL,
 }: {
   onNext: () => void;
   onBack?: () => void;
   onSimulateConflict?: () => void;
+  formulas?: string[];
+  scenario?: Scenario;
+  naturalLanguageStatement?: string;
+  kifStatement?: string;
+  scenarioNL?: string;
 }) {
-  const [gatesComplete, setGatesComplete] = useState(false);
   const [devView, setDevView] = useState(false);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [showAIModal, setShowAIModal] = useState(false);
 
+  // Real validation against the backend (SigmaKEE + Vampire).
+  const CHECKING: Gate[] = [
+    { id: "syntax", label: "Syntax check", status: "checking" },
+    { id: "reference", label: "Reference check", status: "checking" },
+    { id: "consistency", label: "Consistency check (Vampire)", status: "checking" },
+    { id: "scenario", label: "Scenario verification (Vampire)", status: "checking" },
+    { id: "completeness", label: "Completeness check", status: "checking" },
+  ];
+  const [gates, setGates] = useState<Gate[]>(CHECKING);
+  const [proof, setProof] = useState<ProofResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
-    const timer = setTimeout(() => setGatesComplete(true), 2000);
-    return () => clearTimeout(timer);
+    let cancelled = false;
+    setGates(CHECKING);
+    setError(null);
+    runGates({ formulas, scenario })
+      .then((res) => {
+        if (cancelled) return;
+        setGates(res.gates);
+        setProof(res.proof);
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        setError(String(e.message || e));
+      });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const gates = [
-    { label: "Gate 1: Syntax check passed", status: gatesComplete ? "pass" : "checking" },
-    { label: "Gate 2: Reference check passed", status: gatesComplete ? "pass" : "checking" },
-    { label: "Gate 3: Consistency check passed", status: gatesComplete ? "pass" : "checking" },
-    { label: "Gate 4: Scenario verification passed", status: gatesComplete ? "pass" : "checking" },
-    { label: "Gate 5: Completeness check passed", status: gatesComplete ? "pass" : "checking" },
-  ];
-
-  const naturalLanguageStatement = "Every [YourConcept] has [defining property].";
-  const kifStatement = "(=> (instance ?X YourConcept) (attribute ?X DefiningProperty))";
+  const anyChecking = gates.some((g) => g.status === "checking");
+  const anyFail = gates.some((g) => g.status === "fail");
+  const consistencyFailed = gates.some((g) => g.id === "consistency" && g.status === "fail");
+  const gatesComplete = !anyChecking && !anyFail && !error;
 
   const displayStatement = devView ? kifStatement : naturalLanguageStatement;
 
@@ -666,30 +695,67 @@ export function P7VerifyScreen({
           </div>
 
           <div className="space-y-2 mb-6">
-            {gates.map((gate, idx) => (
-              <div
-                key={idx}
-                className={`p-3 rounded-lg border flex items-center gap-3 ${
-                  gate.status === "pass"
-                    ? "border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5"
-                    : "border-[#2a2a3a] bg-[#1a1a26]"
-                }`}
-              >
-                <div className="flex-shrink-0 text-[14px]">
-                  {gate.status === "pass" ? "✓" : "⏳"}
+            {gates.map((gate) => {
+              const tone =
+                gate.status === "pass"
+                  ? "border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5"
+                  : gate.status === "fail"
+                  ? "border-red-500/40 bg-gradient-to-br from-red-500/10 to-red-500/5"
+                  : gate.status === "skipped"
+                  ? "border-[#2a2a3a] bg-[#1a1a26] opacity-60"
+                  : "border-[#2a2a3a] bg-[#1a1a26]";
+              const textTone =
+                gate.status === "pass"
+                  ? "text-emerald-400"
+                  : gate.status === "fail"
+                  ? "text-red-400"
+                  : gate.status === "skipped"
+                  ? "text-[#717182]"
+                  : "text-[#c0c0c8]";
+              return (
+                <div key={gate.id} className={`p-3 rounded-lg border flex items-start gap-3 ${tone}`}>
+                  <div className="flex-shrink-0 text-[14px] leading-5">
+                    {gate.status === "pass" ? (
+                      "✓"
+                    ) : gate.status === "fail" ? (
+                      "✕"
+                    ) : gate.status === "skipped" ? (
+                      "–"
+                    ) : (
+                      <span className="inline-block animate-spin text-blue-400">↻</span>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <p className={`text-[12px] ${textTone}`}>{gate.label}</p>
+                    {gate.detail && <p className="text-[11px] text-[#717182] mt-0.5">{gate.detail}</p>}
+                  </div>
                 </div>
-                <p className={`flex-1 text-[12px] ${gate.status === "pass" ? "text-emerald-400" : "text-[#c0c0c8]"}`}>
-                  {gate.label}
-                </p>
-              </div>
-            ))}
+              );
+            })}
           </div>
+
+          {error && (
+            <div className="mb-6 p-3 rounded-lg border border-red-500/40 bg-red-500/10 text-[12px] text-red-300">
+              Could not reach the validator backend ({error}). Start it with{" "}
+              <code className="font-mono">node server/index.js</code> and set{" "}
+              <code className="font-mono">VITE_API_BASE_URL</code>.
+            </div>
+          )}
+
+          {consistencyFailed && onSimulateConflict && (
+            <div className="mb-6 flex justify-end">
+              <button
+                onClick={onSimulateConflict}
+                className="px-3 py-1.5 text-[11px] bg-red-500 hover:bg-red-600 rounded-md text-white"
+              >
+                Resolve consistency conflict →
+              </button>
+            </div>
+          )}
 
           <div className="p-4 bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/30 rounded-lg">
             <p className="text-[11px] font-medium mb-2 text-amber-400">Test scenario from Phase 1</p>
-            <p className="text-[12px] text-[#c0c0c8] mb-3">
-              If something is a [YourConcept], then [expected property].
-            </p>
+            <p className="text-[12px] text-[#c0c0c8] mb-3">{scenarioNL}</p>
             <div className="flex gap-2">
               <button
                 onClick={() => setShowVerifyModal(true)}
@@ -730,7 +796,10 @@ export function P7VerifyScreen({
           <div className="bg-[#13131c] border border-[#1f1f2c] rounded-lg shadow-xl max-w-lg w-full mx-4 p-6">
             <h3 className="text-[15px] font-medium text-emerald-400 mb-3">✓ Verification complete</h3>
             <p className="text-[13px] text-[#c0c0c8] mb-4 leading-relaxed">
-              All consistency checks passed. Your definition is ready to submit.
+              Vampire returned{" "}
+              <strong className="text-emerald-400">{proof?.szs ?? "…"}</strong>
+              {proof?.wallMs ? ` in ${(proof.wallMs / 1000).toFixed(1)}s` : ""}. The example inference is
+              formally entailed by your definition, checked by an automated theorem prover.
             </p>
             <button
               onClick={() => setShowVerifyModal(false)}
@@ -739,7 +808,7 @@ export function P7VerifyScreen({
               Got it
             </button>
             <p className="text-xs italic text-neutral-500 text-center">
-              If you type something specific we haven't pre-loaded, we're working on providing tailored feedback for it. This demo uses canned responses.
+              This is a real Vampire proof over the SUMO knowledge base, not a canned response.
             </p>
           </div>
         </div>

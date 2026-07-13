@@ -31,17 +31,17 @@ export function P1DescribeScreen({
   const showCallout = description.length > 0 && wordCount < 20;
 
   const demoContent = {
-    mic: "Voice recording demo: [Demo audio captured: 17 seconds. Transcription: 'I was reading about animals that hunt at night and never quite knew what to call that property…']",
-    image: "Image demo: [Demo image uploaded: barn-owl-at-night.jpg. The system has identified visual features: large eyes adapted to low light, silent flight feathers, perched at dusk.]",
-    upload: "File demo: [Demo file uploaded: zoology-notes.pdf, 4 pages. The system has extracted key terms: nocturnal, crepuscular, circadian, predator.]",
-    link: "Link demo: [Demo URL: en.wikipedia.org/wiki/Nocturnality. The system has parsed the page summary.]",
+    mic: "Voice recording demo: [Demo audio captured: 15 seconds. Transcription: 'I keep hitting this defect where the program does the wrong thing, and I never knew the precise term for it…']",
+    image: "Image demo: [Demo image uploaded: stack-trace.png. The system has identified visual features: a null-pointer exception raised during input parsing, an unhandled error path.]",
+    upload: "File demo: [Demo file uploaded: bug-report.pdf, 3 pages. The system has extracted key terms: defect, crash, regression, fault, incorrect behavior.]",
+    link: "Link demo: [Demo URL: en.wikipedia.org/wiki/Software_bug. The system has parsed the page summary.]",
   };
 
   const extractedText = {
-    mic: "I was reading about animals that hunt at night and never quite knew what to call that property.",
-    image: "A nocturnal bird with large eyes adapted to low light, silent flight feathers, seen perched at dusk.",
-    upload: "Notes on nocturnal animals, covering nocturnal, crepuscular, and circadian behavior in predators.",
-    link: "Nocturnality is an animal behavior characterized by being active during the night and sleeping during the day.",
+    mic: "I keep hitting a defect where the program produces the wrong result, and I never knew the precise term for it.",
+    image: "A stack trace showing a null-pointer dereference during input parsing: an incorrect, unintended program behavior.",
+    upload: "Notes on software defects, covering crashes, regressions, and faults that make a program behave incorrectly.",
+    link: "A software bug is an error, flaw, or fault in a computer program that causes it to produce an incorrect or unexpected result.",
   };
 
   const handleModalClose = () => {

@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Logic Project</title>
+<meta name="description" content="Lowering the gate to formal knowledge contribution. A wizard for non-ontologists to contribute to SUMO.">
+<style>
+  :root {
+    --navy: #21295C;
+    --ink: #1A1A2E;
+    --teal: #1C7293;
+    --slate: #5C6B7A;
+    --pale: #E8F0F4;
+    --orange: #F4A261;
+    --white: #FFFFFF;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    background: var(--pale);
+    color: var(--ink);
+    line-height: 1.5;
+  }
+  main {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 48px 24px 32px;
+  }
+  header h1 {
+    color: var(--navy);
+    font-size: 2.25rem;
+    margin: 0 0 8px;
+    letter-spacing: -0.01em;
+  }
+  header p.tagline {
+    color: var(--teal);
+    font-size: 1.1rem;
+    margin: 0 0 32px;
+    font-weight: 500;
+  }
+  section.blurb {
+    background: var(--white);
+    padding: 20px 24px;
+    border-left: 4px solid var(--orange);
+    margin-bottom: 32px;
+    border-radius: 2px;
+  }
+  section.blurb p {
+    margin: 0;
+    color: var(--ink);
+    font-size: 0.98rem;
+  }
+  .links {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+  .links a {
+    display: block;
+    background: var(--navy);
+    color: var(--white);
+    text-decoration: none;
+    padding: 16px 20px;
+    border-radius: 4px;
+    font-weight: 500;
+    transition: background 0.15s;
+  }
+  .links a:hover {
+    background: var(--teal);
+  }
+  .links a .label {
+    display: block;
+    font-size: 1.05rem;
+  }
+  .links a .url {
+    display: block;
+    font-size: 0.82rem;
+    opacity: 0.75;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    margin-top: 4px;
+    word-break: break-all;
+  }
+  footer {
+    color: var(--slate);
+    font-size: 0.85rem;
+    text-align: center;
+    border-top: 1px solid var(--slate);
+    padding-top: 16px;
+  }
+  footer p { margin: 4px 0; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>The Logic Project</h1>
+    <p class="tagline">Lowering the gate to formal knowledge contribution</p>
+  </header>
+
+  <section class="blurb">
+    <p>A wizard that lets non-ontologists contribute to the Suggested Upper Merged Ontology (SUMO). The LLM handles search and Socratic dialogue. SigmaKEE handles syntax, type discipline, and theorem proving. The wizard is the seam between them.</p>
+  </section>
+
+  <nav class="links">
+    <a href="https://www.figma.com/make/ArkcHKN1vecybF5mve92UT/The-Logic-Project?code-node-id=0-9&p=f&t=ZQQlalZ0fHzp5I2i-0&fullscreen=1" id="demo">
+      <span class="label">Try the master build</span>
+      <span class="url">live Figma Make prototype</span>
+    </a>
+    <a href="https://github.com/ontologyportal/sumo">
+      <span class="label">SUMO repository</span>
+      <span class="url">github.com/ontologyportal/sumo</span>
+    </a>
+    <a href="https://github.com/jdev-02/Thelogicproject">
+      <span class="label">Prototype source</span>
+      <span class="url">github.com/jdev-02/Thelogicproject</span>
+    </a>
+  </nav>
+
+  <footer>
+    <p>Team Sigma Gamma &middot; CS3004 &middot; Naval Postgraduate School</p>
+    <p>LT Jonathan Goohs, USN &middot; LT Onur Orkut Genisel</p>
+  </footer>
+</main>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "name": "logic-project-validator-api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local API bridging the wizard front-end to the real SUMO validators (SigmaKEE + Vampire) via tools/sigma-vv scripts. Zero dependencies.",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node index.js"
+  }
+}
