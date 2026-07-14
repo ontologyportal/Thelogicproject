@@ -31,16 +31,18 @@ Walk to Phase 7: the gates call the backend and a real Vampire `Theorem` comes
 back. The demo term is `SoftwareBug -> Defective` (a self-contained inference that
 proves reliably and fast).
 
-## GitHub Pages
+## Hosting
 
-Pushing to `main` builds the front-end and deploys it to
-`https://jdev-02.github.io/Thelogicproject/` via `.github/workflows/deploy-pages.yml`.
+The repo is **private** (protecting the code + IP), so public GitHub Pages is not
+used. Iterate by cloning and running locally (above). For a private live URL, use
+**Vercel with deployment protection** (repo stays private, URL is login-gated) or
+GitHub Pro (private Pages). Set the build base with `VITE_BASE=/Thelogicproject/`
+only if hosting under a subpath; Vercel serves at root so no base is needed.
 
-**Important:** GitHub Pages is static and cannot run Vampire/SigmaKEE. On the Pages
-site the wizard UI works, but Phase 7 shows a "connect a backend" message because
-there's no `VITE_API_BASE_URL` reachable. To make the hosted site do live proofs,
-host `server/` somewhere (DigitalOcean, etc.) and point `VITE_API_BASE_URL` at it,
-or run the backend locally while iterating.
+**Important:** any static host serves the wizard UI only. It cannot run
+Vampire/SigmaKEE, so Phase 7 shows a "connect a backend" message unless
+`VITE_API_BASE_URL` points at a running `server/` (local, or hosted on a box with
+the SUMO toolchain).
 
 ## Backend API
 
