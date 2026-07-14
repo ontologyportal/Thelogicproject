@@ -3,6 +3,41 @@
 The wizard front-end plus a local API that runs **real** SUMO validation
 (SigmaKEE + Vampire). Patent Pending.
 
+## Backend orientation (read this first — written for a new contributor or an AI agent)
+
+**One request, end to end:**
+
+```
+Wizard UI (React)
+  --HTTP fetch (VITE_API_BASE_URL)-->  server/index.js
+      --spawns bash-->  ~/workspace/tools/sigma-vv/*.sh
+          --java-->  SigmaKEE (sigmakee/build/sigmakee.jar) + Vampire binary
+      <--exit code + report/.proof.json--
+  <--JSON: per-gate {status, detail} + proof {szs, wallMs}--
+```
+
+**Files in this repo:**
+- `server/index.js` — zero-dependency Node HTTP server. Writes each formula/scenario to a
+  temp `.kif`/`.tq`, shells the matching sigma-vv script, parses its exit code + the
+  report/`.proof.json` it emits. Endpoints: `/health`, `/api/typecheck`, `/api/prove`, `/api/gates`.
+- `src/app/services/api.ts` — front-end client (`runGates`, `typecheck`); reads `VITE_API_BASE_URL`.
+  Also holds `DEMO_TERM` (SoftwareBug → Defective).
+- `src/app/components/logic/screens/index.tsx` → `P7VerifyScreen` — calls `runGates()` on mount,
+  renders per-gate pass/fail + the Vampire result. This is the only screen wired to the backend.
+
+**Lives on the workstation, NOT in this repo (the server calls them):**
+`~/workspace/tools/sigma-vv/*.sh` (the real validators), `~/workspace/sigmakee/build/sigmakee.jar`,
+the Vampire binary, and KB config at `~/.sigmakee/KBs/config.xml`. To run the backend you need that
+SUMO workspace present. `server/index.js` is only the HTTP glue.
+
+**Gotchas:**
+- Each call reloads the whole SUMO KB (~30–40s). Fine for a recording; the fast path is a
+  persistent in-process server — `tools/sigma-vv/SigmaVV.java` is built to be called after one
+  `KBmanager.initializeOnce()`.
+- Full-KB proof scenarios regressed on Vampire 5 (instruction limits during SInE selection on the
+  large KB). The demo uses **self-contained** proofs, which resolve in <1s and are unaffected.
+- `src/app/components/wizard/` is dead code (nothing imports it) — safe to delete.
+
 ## What's wired vs. what's stubbed
 
 | Piece | State |
