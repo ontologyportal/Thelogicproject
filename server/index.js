@@ -30,6 +30,18 @@ const scriptEnv = { ...process.env, SIGMA_HOME };
 
 // --- helpers ------------------------------------------------------------
 
+// This server has a wildcard CORS policy (Access-Control-Allow-Origin: *)
+// for local-dev convenience, which means any page open in the same browser
+// while it's running can POST here. term/tag land in a filesystem path
+// (path.join(TMP_DIR, `${term}_${tag}.tq`)) and as sigma-prove.sh
+// arguments, so an unvalidated value is a path-traversal vector (a term
+// like "../../../whatever" writes outside TMP_DIR). Reject anything that
+// isn't a safe identifier before it touches the filesystem.
+const SAFE_ID_RE = /^[A-Za-z0-9_-]{1,80}$/;
+function safeId(s, fallback) {
+  return typeof s === "string" && SAFE_ID_RE.test(s) ? s : fallback;
+}
+
 /** Run a sigma-vv script, return {code, stdout, stderr}. */
 function runScript(script, args, timeout = 120000) {
   const r = spawnSync("bash", [path.join(SIGMA_VV, script), ...args], {
@@ -63,6 +75,8 @@ function typecheck(formula) {
  * via sigma-prove.sh, then read the sidecar <term>_<tag>.proof.json.
  */
 function prove(scenario, term = "wizard", tag = "gate") {
+  term = safeId(term, "wizard");
+  tag = safeId(tag, "gate");
   const { axioms = [], facts = [], query, answer = "yes", note = "" } = scenario;
   const lines = [];
   if (note) lines.push(`(note ${JSON.stringify(note)})`);
