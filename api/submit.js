@@ -3,8 +3,11 @@
 // session validated, and opens a PR on the sumo-contributions staging repo.
 // The staging repo's own CI re-runs the same validation gates on the PR.
 const { parseCookies, verify } = require("./_lib/session");
-const { assembleKif, assembleTq } = require("./_lib/kif");
+const { assembleKif, assembleTq, isValidIdentifier } = require("./_lib/kif");
 const { openContributionPR } = require("./_lib/github");
+
+const MAX_TEXT_LEN = 4000;
+const MAX_FORMULAS = 25;
 
 module.exports = async (req, res) => {
   if (req.method !== "POST") {
@@ -35,6 +38,22 @@ module.exports = async (req, res) => {
         error: "term, parent, docString, everydayName, and at least one formula are required",
       })
     );
+  }
+  // term/parent become raw (unquoted) KIF syntax and GitHub file-path
+  // segments — must be clean identifiers, not just non-empty.
+  if (!isValidIdentifier(term) || !isValidIdentifier(parent)) {
+    res.writeHead(400, { "Content-Type": "application/json" });
+    return res.end(
+      JSON.stringify({ error: "term and parent must be plain identifiers (letters, digits, underscore)" })
+    );
+  }
+  if (docString.length > MAX_TEXT_LEN || everydayName.length > MAX_TEXT_LEN) {
+    res.writeHead(400, { "Content-Type": "application/json" });
+    return res.end(JSON.stringify({ error: "docString/everydayName too long" }));
+  }
+  if (formulas.length > MAX_FORMULAS || formulas.some((f) => typeof f !== "string" || f.length > MAX_TEXT_LEN)) {
+    res.writeHead(400, { "Content-Type": "application/json" });
+    return res.end(JSON.stringify({ error: "too many or oversized formulas" }));
   }
 
   const kif = assembleKif({ term, parent, everydayName, docString, formulas });
@@ -69,7 +88,10 @@ module.exports = async (req, res) => {
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ prUrl, prNumber }));
   } catch (err) {
+    // Full detail (may include GitHub API response bodies) goes to Vercel's
+    // logs only — never to the browser.
+    console.error("submit.js: openContributionPR failed:", err);
     res.writeHead(502, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ error: String(err.message || err) }));
+    res.end(JSON.stringify({ error: "Could not open the pull request. Please try again." }));
   }
 };

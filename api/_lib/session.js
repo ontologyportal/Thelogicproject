@@ -3,6 +3,8 @@
 // blob in an httpOnly cookie, not a database-backed session store.
 const crypto = require("crypto");
 
+const SESSION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // 30 days, matches the cookie's own Max-Age
+
 function sign(payload, secret) {
   const data = Buffer.from(JSON.stringify(payload)).toString("base64url");
   const sig = crypto.createHmac("sha256", secret).update(data).digest("base64url");
@@ -16,11 +18,17 @@ function verify(token, secret) {
   const a = Buffer.from(sig || "");
   const b = Buffer.from(expected);
   if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+  let payload;
   try {
-    return JSON.parse(Buffer.from(data, "base64url").toString("utf8"));
+    payload = JSON.parse(Buffer.from(data, "base64url").toString("utf8"));
   } catch {
     return null;
   }
+  // Signature verification alone doesn't expire a session — the cookie's
+  // Max-Age is a client-side hint the browser can be made to ignore, so
+  // enforce the same lifetime server-side against the embedded issue time.
+  if (typeof payload.iat !== "number" || Date.now() - payload.iat > SESSION_MAX_AGE_MS) return null;
+  return payload;
 }
 
 function parseCookies(req) {
