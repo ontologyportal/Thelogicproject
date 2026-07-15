@@ -63,10 +63,61 @@ export async function typecheck(formula: string): Promise<{ valid: boolean; deta
   return res.json();
 }
 
+// --- auth + submit ---------------------------------------------------------
+// These go same-origin (relative paths) to the Vercel serverless functions
+// under api/, not to the local validator backend above — separate concerns,
+// separate base URLs.
+
+export interface Me {
+  login: string;
+  avatar?: string;
+}
+
+/** Current signed-in GitHub identity, or null if not signed in. */
+export async function getMe(): Promise<Me | null> {
+  const res = await fetch("/api/auth/me", { credentials: "include" });
+  if (!res.ok) return null;
+  return res.json();
+}
+
+export function signOut(): Promise<void> {
+  return fetch("/api/auth/logout", { method: "POST", credentials: "include" }).then(() => undefined);
+}
+
+export interface Contribution {
+  term: string;
+  parent: string;
+  everydayName: string;
+  docString: string;
+  formulas: string[];
+  scenario?: Scenario;
+}
+
+export interface SubmitResult {
+  prUrl: string;
+  prNumber: number;
+}
+
+/** Opens a real PR on the staging contribution repo. Requires a signed-in session. */
+export async function submitContribution(contribution: Contribution): Promise<SubmitResult> {
+  const res = await fetch("/api/submit", {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(contribution),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || `submit failed: ${res.status}`);
+  }
+  return res.json();
+}
+
 // Default demo term: SoftwareBug -> Defective. Self-contained so the proof is
 // real (real Vampire Theorem) and reliable, independent of deep KB selection.
 export const DEMO_TERM = {
   name: "SoftwareBug",
+  parent: "ComputerProgram",
   naturalLanguage: "Every software bug is, by definition, defective program behavior.",
   kif: "(=> (instance ?X SoftwareBug) (attribute ?X Defective))",
   scenarioNL: "If something is a SoftwareBug, then it is Defective.",

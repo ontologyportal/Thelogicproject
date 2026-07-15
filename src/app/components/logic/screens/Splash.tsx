@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Github, UserCircle2, Globe2, Eye, ShieldCheck, ChevronRight } from "lucide-react";
+import { getMe } from "../../../services/api";
 
 /**
  * Splash Screen - Hi-fi dark mode (v12 style)
@@ -17,14 +18,23 @@ export function SplashScreen({
     preAuth ? "guest" : "none"
   );
   const [showGithubModal, setShowGithubModal] = useState(false);
+  const [githubLogin, setGithubLogin] = useState<string | null>(null);
+
+  // Picks up an existing session, e.g. right after the OAuth redirect back to "/".
+  useEffect(() => {
+    getMe().then((me) => {
+      if (me) {
+        setGithubLogin(me.login);
+        setAuthStatus("authenticated");
+        onAuthChange("authenticated");
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleGithubSignIn = () => {
     setShowGithubModal(true);
-    setTimeout(() => {
-      setShowGithubModal(false);
-      setAuthStatus("authenticated");
-      onAuthChange("authenticated");
-    }, 1000);
+    window.location.href = "/api/auth/login";
   };
 
   const handleGuestContinue = () => {
@@ -66,22 +76,30 @@ export function SplashScreen({
             </div>
             {/* Auth row */}
             <div className="flex items-center gap-2 text-[11.5px]">
-              <button
-                onClick={handleGithubSignIn}
-                disabled={authStatus !== "none"}
-                className="px-3 py-2 rounded-md bg-[#13131c] border border-[#1f1f2c] hover:border-[#2a2a3a] text-[#c0c0c8] flex items-center gap-2 disabled:opacity-50"
-              >
-                <Github className="size-3.5" /> Sign in with GitHub
-                <span className="text-[10px] text-[#717182]">claim credit</span>
-              </button>
-              <span className="text-[#555]">or</span>
-              <button
-                onClick={handleGuestContinue}
-                disabled={authStatus !== "none"}
-                className="px-3 py-2 rounded-md text-[#a0a0b0] hover:text-white hover:bg-white/5 flex items-center gap-2 disabled:opacity-50"
-              >
-                <UserCircle2 className="size-3.5" /> Continue as guest
-              </button>
+              {authStatus === "authenticated" && githubLogin ? (
+                <span className="px-3 py-2 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center gap-2">
+                  <Github className="size-3.5" /> Signed in as @{githubLogin}
+                </span>
+              ) : (
+                <>
+                  <button
+                    onClick={handleGithubSignIn}
+                    disabled={authStatus !== "none"}
+                    className="px-3 py-2 rounded-md bg-[#13131c] border border-[#1f1f2c] hover:border-[#2a2a3a] text-[#c0c0c8] flex items-center gap-2 disabled:opacity-50"
+                  >
+                    <Github className="size-3.5" /> Sign in with GitHub
+                    <span className="text-[10px] text-[#717182]">claim credit</span>
+                  </button>
+                  <span className="text-[#555]">or</span>
+                  <button
+                    onClick={handleGuestContinue}
+                    disabled={authStatus !== "none"}
+                    className="px-3 py-2 rounded-md text-[#a0a0b0] hover:text-white hover:bg-white/5 flex items-center gap-2 disabled:opacity-50"
+                  >
+                    <UserCircle2 className="size-3.5" /> Continue as guest
+                  </button>
+                </>
+              )}
             </div>
             <div className="mt-12 flex items-center gap-8 text-[11px] text-[#717182]">
               <div className="flex items-center gap-2"><Globe2 className="size-3.5 text-blue-400" /> Public & open-licensed</div>
@@ -135,10 +153,7 @@ export function SplashScreen({
               <div className="animate-spin">
                 <Github className="size-12 text-[#a0a0b0]" />
               </div>
-              <p className="text-lg text-[#e0e0e8] mb-2">Authenticating with GitHub…</p>
-              <p className="text-xs italic text-neutral-500 text-center">
-                If you type something specific we haven't pre-loaded, we're working on providing tailored feedback for it. This demo uses canned responses.
-              </p>
+              <p className="text-lg text-[#e0e0e8] mb-2">Redirecting to GitHub…</p>
             </div>
           </div>
         </div>

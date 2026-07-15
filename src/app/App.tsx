@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TopNavigation, PhaseTransition, StepNavigator } from "./components/logic/Navigation";
 import { type PhaseId } from "./components/logic/shared";
 import {
@@ -17,6 +17,7 @@ import {
   ConflictResolutionScreen,
   DisputeSubmittedScreen,
 } from "./components/logic/screens/ConflictResolution";
+import { getMe, DEMO_TERM, type Contribution } from "./services/api";
 
 /**
  * The Logic Project - Build A (Production App)
@@ -27,17 +28,41 @@ export default function App() {
   const [currentPhase, setCurrentPhase] = useState<PhaseId>("splash");
   const [completedPhases, setCompletedPhases] = useState<PhaseId[]>([]);
   const [authStatus, setAuthStatus] = useState<"authenticated" | "guest" | "none">("none");
-  const [userName] = useState("demo-user");
+  const [userName, setUserName] = useState<string | undefined>(undefined);
   const [autoTitle, setAutoTitle] = useState("");
   const [transition, setTransition] = useState<{ open: boolean; status: string }>({
     open: false,
     status: "",
   });
 
+  // Real GitHub identity, if the user has already signed in (e.g. returning
+  // from the OAuth redirect, or a prior session cookie).
+  useEffect(() => {
+    getMe().then((me) => {
+      if (me) {
+        setAuthStatus("authenticated");
+        setUserName(me.login);
+      }
+    });
+  }, []);
+
   // Lifted phase state — persists when user navigates back
   const [p1Description, setP1Description] = useState("");
   const [p1Scenario, setP1Scenario] = useState("");
-  const [proposedParent] = useState("your category");
+  const [p5Fields, setP5Fields] = useState({ parent: "", everydayName: "", docString: "" });
+  const proposedParent = p5Fields.parent || "your category";
+
+  // The rule-drafting LLM layer isn't wired yet, so the actual KIF formulas
+  // submitted/validated fall back to the known-good demo term; the
+  // structural fields (term/parent/name/doc) are the user's real input.
+  const contribution: Contribution = {
+    term: autoTitle || DEMO_TERM.name,
+    parent: p5Fields.parent || DEMO_TERM.parent,
+    everydayName: p5Fields.everydayName || autoTitle || DEMO_TERM.name,
+    docString: p5Fields.docString || DEMO_TERM.naturalLanguage,
+    formulas: DEMO_TERM.formulas,
+    scenario: DEMO_TERM.scenario,
+  };
 
   // Conflict resolution sub-state
   const [disputeOpen, setDisputeOpen] = useState(false);
@@ -142,6 +167,7 @@ export default function App() {
           <P5DefineScreen
             onNext={() => navigate("p6-statements")}
             onBack={() => navigate("p4-place")}
+            onFieldsChange={setP5Fields}
           />
         );
 
@@ -161,6 +187,8 @@ export default function App() {
             onNext={() => navigate("submit")}
             onBack={() => navigate("p6-statements")}
             onSimulateConflict={() => navigate("conflict-resolution")}
+            formulas={contribution.formulas}
+            scenario={contribution.scenario}
           />
         );
 
@@ -185,6 +213,7 @@ export default function App() {
             onRestart={() => navigate("p1-describe")}
             termName={autoTitle || "[YourConcept]"}
             proposedParent={proposedParent}
+            contribution={authStatus === "authenticated" ? contribution : undefined}
           />
         );
 

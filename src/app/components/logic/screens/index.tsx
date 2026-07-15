@@ -11,7 +11,16 @@ import { useState, useEffect, useRef } from "react";
 import confetti from "canvas-confetti";
 import { motion } from "motion/react";
 import { Copy, Twitter, Link } from "lucide-react";
-import { runGates, DEMO_TERM, type Gate, type ProofResult, type Scenario } from "../../../services/api";
+import {
+  runGates,
+  submitContribution,
+  DEMO_TERM,
+  type Gate,
+  type ProofResult,
+  type Scenario,
+  type Contribution,
+  type SubmitResult,
+} from "../../../services/api";
 
 const PLACE_QUESTIONS = [
   "Can you buy or sell it?",
@@ -215,9 +224,11 @@ export function P4PlaceScreen({
 export function P5DefineScreen({
   onNext,
   onBack,
+  onFieldsChange,
 }: {
   onNext: () => void;
   onBack?: () => void;
+  onFieldsChange?: (fields: { parent: string; everydayName: string; docString: string }) => void;
 }) {
   const [accepted, setAccepted] = useState<boolean[]>([false, false, false]);
   const [edited, setEdited] = useState<boolean[]>([false, false, false]);
@@ -240,6 +251,18 @@ export function P5DefineScreen({
   ];
 
   const [fieldValues, setFieldValues] = useState(initialFields.map(f => f.value));
+
+  useEffect(() => {
+    // Only lift fields the user has actually confirmed — the initial values
+    // are bracketed placeholders ("[Parent Category]"), not valid KIF terms.
+    const confirmed = (idx: number) => (accepted[idx] || edited[idx] ? fieldValues[idx] : "");
+    onFieldsChange?.({
+      parent: confirmed(0),
+      everydayName: confirmed(1),
+      docString: confirmed(2),
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fieldValues, accepted, edited]);
 
   const handleEdit = (idx: number) => {
     setEditingIndex(idx);
@@ -850,16 +873,24 @@ export function SubmitScreen({
   onRestart,
   termName = "[YourConcept]",
   proposedParent = "your category",
+  contribution,
 }: {
   onRestart: () => void;
   termName?: string;
   proposedParent?: string;
+  contribution?: Contribution;
 }) {
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedMd, setCopiedMd] = useState(false);
   const copyTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-  useEffect(() => {
+  const [status, setStatus] = useState<"submitting" | "success" | "error">(
+    contribution ? "submitting" : "success"
+  );
+  const [prResult, setPrResult] = useState<SubmitResult | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const fireConfetti = () => {
     const burst = {
       origin: { x: 0.5, y: 0.7 },
       spread: 70,
@@ -867,10 +898,35 @@ export function SubmitScreen({
     };
     confetti({ ...burst, particleCount: 80 });
     const t = setTimeout(() => confetti({ ...burst, particleCount: 50 }), 400);
+    copyTimersRef.current.push(t);
+  };
+
+  const attemptSubmit = () => {
+    if (!contribution) {
+      setStatus("success");
+      fireConfetti();
+      return;
+    }
+    setStatus("submitting");
+    setErrorMsg(null);
+    submitContribution(contribution)
+      .then((result) => {
+        setPrResult(result);
+        setStatus("success");
+        fireConfetti();
+      })
+      .catch((err) => {
+        setErrorMsg(String(err.message || err));
+        setStatus("error");
+      });
+  };
+
+  useEffect(() => {
+    attemptSubmit();
     return () => {
-      clearTimeout(t);
       copyTimersRef.current.forEach(clearTimeout);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleCopyLink = () => {
@@ -892,6 +948,46 @@ export function SubmitScreen({
   const tweetText = encodeURIComponent(
     "Just contributed to The Logic Project — an open knowledge base anyone can use to reason about the world"
   );
+  const statementCount = contribution?.formulas.length ?? 3;
+
+  if (status === "submitting") {
+    return (
+      <div className="h-full flex flex-col bg-[#13131c] text-[#e0e0e8]">
+        <div className="flex-1 overflow-auto">
+          <Frame title="Submitting your contribution" subtitle="opening a pull request on GitHub">
+            <div className="flex items-center gap-3 p-5 bg-[#1a1a26] border border-[#2a2a3a] rounded-lg">
+              <span className="inline-block animate-spin text-blue-400 text-[16px]">↻</span>
+              <p className="text-[13px] text-[#c0c0c8]">
+                Assembling {termName} and opening a pull request against the contribution repo…
+              </p>
+            </div>
+          </Frame>
+          <AppFooter />
+        </div>
+      </div>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <div className="h-full flex flex-col bg-[#13131c] text-[#e0e0e8]">
+        <div className="flex-1 overflow-auto">
+          <Frame title="Submission failed" subtitle="your work is not lost">
+            <div className="p-5 bg-red-500/10 border border-red-500/30 rounded-lg mb-4">
+              <p className="text-[13px] text-red-300 mb-3">{errorMsg}</p>
+              <button
+                onClick={attemptSubmit}
+                className="px-3 py-1.5 text-[11px] bg-blue-500 hover:bg-blue-600 rounded-md text-white"
+              >
+                Try again
+              </button>
+            </div>
+          </Frame>
+          <AppFooter />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex flex-col bg-[#13131c] text-[#e0e0e8]">
@@ -925,12 +1021,23 @@ export function SubmitScreen({
               </div>
               <div className="flex items-baseline gap-3">
                 <span className="text-[10px] uppercase tracking-wider text-[#717182] w-28 flex-shrink-0">Statements</span>
-                <span className="text-[13px] text-[#c0c0c8]">3 statements added</span>
+                <span className="text-[13px] text-[#c0c0c8]">{statementCount} statement{statementCount === 1 ? "" : "s"} added</span>
               </div>
             </div>
 
             <p className="text-[11px] text-[#717182]">
-              PR #[NNN] · Guest? routed to staging queue. Signed in? PR opened on your fork.
+              {prResult ? (
+                <a
+                  href={prResult.prUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-400 hover:text-blue-300 underline underline-offset-2"
+                >
+                  PR #{prResult.prNumber}
+                </a>
+              ) : (
+                "Sign in with GitHub to open a real pull request."
+              )}
             </p>
           </div>
 
