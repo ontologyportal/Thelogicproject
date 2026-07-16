@@ -7,7 +7,11 @@
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
 
-export type GateStatus = "checking" | "pass" | "fail" | "skipped";
+// "unverified" = the fast local pre-check couldn't confirm this (e.g. a
+// partial-KB engine), not that it's wrong. Distinct from "fail", which means
+// an authoritative check actively found a problem. sumo-contributions' CI
+// re-checks every submission against the real toolchain regardless.
+export type GateStatus = "checking" | "pass" | "fail" | "unverified" | "skipped";
 
 export interface Gate {
   id: string;

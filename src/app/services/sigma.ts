@@ -77,13 +77,28 @@ export async function runGatesLocal({ formulas = [], scenario }: GatesRequest): 
     const proved = r.status === "Proved";
     proof = { proved, szs: proved ? "Theorem" : r.status, wallMs, detail: `sigma-rs: ${proved ? "Theorem" : r.status}.` };
   }
-  const proofStatus = !proof ? "skipped" : proof.proved ? "pass" : "fail";
-  gates.push({ id: "consistency", label: "Consistency check (sigma-rs)", status: proofStatus, detail: proof ? proof.detail : "No scenario supplied." });
+  // This engine only holds bare Merge.kif resident, not the full KB, so a
+  // not-proved result means "not verified against this partial KB," not
+  // "disproven." The sumo-contributions CI re-checks every submission
+  // against the real, full toolchain, so a local non-proof reads as
+  // advisory rather than a failure.
+  const NOT_VERIFIED = "Not verified locally (partial knowledge base). This will be checked for real when you submit.";
+  const proofStatus = !proof ? "skipped" : proof.proved ? "pass" : "unverified";
+  gates.push({
+    id: "consistency",
+    label: "Consistency check (sigma-rs)",
+    status: proofStatus,
+    detail: !proof ? "No scenario supplied." : proof.proved ? proof.detail : NOT_VERIFIED,
+  });
   gates.push({
     id: "scenario",
     label: "Scenario verification (sigma-rs)",
     status: proofStatus,
-    detail: proof ? `Proved the example inference in ${((proof.wallMs ?? 0) / 1000).toFixed(2)}s.` : "No scenario supplied.",
+    detail: !proof
+      ? "No scenario supplied."
+      : proof.proved
+        ? `Proved the example inference in ${((proof.wallMs ?? 0) / 1000).toFixed(2)}s.`
+        : NOT_VERIFIED,
   });
 
   const hasRule = formulas.some((f) => /\(=>|\(<=>/.test(f));

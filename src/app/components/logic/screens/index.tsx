@@ -724,6 +724,8 @@ export function P7VerifyScreen({
                   ? "border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5"
                   : gate.status === "fail"
                   ? "border-red-500/40 bg-gradient-to-br from-red-500/10 to-red-500/5"
+                  : gate.status === "unverified"
+                  ? "border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-amber-500/5"
                   : gate.status === "skipped"
                   ? "border-[#2a2a3a] bg-[#1a1a26] opacity-60"
                   : "border-[#2a2a3a] bg-[#1a1a26]";
@@ -732,6 +734,8 @@ export function P7VerifyScreen({
                   ? "text-emerald-400"
                   : gate.status === "fail"
                   ? "text-red-400"
+                  : gate.status === "unverified"
+                  ? "text-amber-400"
                   : gate.status === "skipped"
                   ? "text-[#717182]"
                   : "text-[#c0c0c8]";
@@ -742,6 +746,8 @@ export function P7VerifyScreen({
                       "✓"
                     ) : gate.status === "fail" ? (
                       "✕"
+                    ) : gate.status === "unverified" ? (
+                      "?"
                     ) : gate.status === "skipped" ? (
                       "–"
                     ) : (
@@ -817,13 +823,25 @@ export function P7VerifyScreen({
       {showVerifyModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="bg-[#13131c] border border-[#1f1f2c] rounded-lg shadow-xl max-w-lg w-full mx-4 p-6">
-            <h3 className="text-[15px] font-medium text-emerald-400 mb-3">✓ Verification complete</h3>
-            <p className="text-[13px] text-[#c0c0c8] mb-4 leading-relaxed">
-              Vampire returned{" "}
-              <strong className="text-emerald-400">{proof?.szs ?? "…"}</strong>
-              {proof?.wallMs ? ` in ${(proof.wallMs / 1000).toFixed(1)}s` : ""}. The example inference is
-              formally entailed by your definition, checked by an automated theorem prover.
-            </p>
+            {proof?.proved ? (
+              <>
+                <h3 className="text-[15px] font-medium text-emerald-400 mb-3">✓ Verification complete</h3>
+                <p className="text-[13px] text-[#c0c0c8] mb-4 leading-relaxed">
+                  The prover returned <strong className="text-emerald-400">{proof.szs}</strong>
+                  {proof.wallMs ? ` in ${(proof.wallMs / 1000).toFixed(1)}s` : ""}. The example inference is
+                  formally entailed by your definition, checked by an automated theorem prover.
+                </p>
+              </>
+            ) : (
+              <>
+                <h3 className="text-[15px] font-medium text-amber-400 mb-3">? Not verified locally</h3>
+                <p className="text-[13px] text-[#c0c0c8] mb-4 leading-relaxed">
+                  The local prover could not confirm this inference{proof?.szs ? ` (${proof.szs})` : ""}, which
+                  can happen with a partial knowledge base and doesn't mean it's wrong. This gets checked for
+                  real, against the full ontology, when you submit.
+                </p>
+              </>
+            )}
             <button
               onClick={() => setShowVerifyModal(false)}
               className="w-full py-2 bg-blue-500 hover:bg-blue-600 rounded-md text-[13px] text-white mb-3"
@@ -831,7 +849,7 @@ export function P7VerifyScreen({
               Got it
             </button>
             <p className="text-xs italic text-neutral-500 text-center">
-              This is a real Vampire proof over the SUMO knowledge base, not a canned response.
+              This is a real proof attempt over the SUMO knowledge base, not a canned response.
             </p>
           </div>
         </div>

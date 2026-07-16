@@ -82,20 +82,33 @@ async function gates({ formulas = [], scenario }) {
     detail: hasRef ? "Statements reference existing ontology structure." : "No structural references found.",
   });
 
+  // This engine only holds bare Merge.kif resident, not the full KB
+  // (Cyber.kif, Mid-level-ontology.kif, etc.), so a not-proved result here
+  // means "not verified against this partial KB," not "disproven." The
+  // sumo-contributions CI re-checks every submission against the real, full
+  // toolchain, so a local non-proof should read as advisory, not a failure,
+  // or a legitimate contribution could look broken before it ever reaches
+  // the authoritative gate.
   let proof = null;
   if (scenario && scenario.query) proof = await prove(scenario);
   gates.push({
     id: "consistency",
     label: "Consistency check (sigma-rs)",
-    status: !proof ? "skipped" : proof.proved ? "pass" : "fail",
-    detail: proof ? proof.detail : "No scenario supplied.",
+    status: !proof ? "skipped" : proof.proved ? "pass" : "unverified",
+    detail: proof
+      ? proof.proved
+        ? proof.detail
+        : "Not verified locally (partial knowledge base). This will be checked for real when you submit."
+      : "No scenario supplied.",
   });
   gates.push({
     id: "scenario",
     label: "Scenario verification (sigma-rs)",
-    status: !proof ? "skipped" : proof.proved ? "pass" : "fail",
+    status: !proof ? "skipped" : proof.proved ? "pass" : "unverified",
     detail: proof
-      ? `Proved the example inference in ${proof.wallMs != null ? (proof.wallMs / 1000).toFixed(2) + "s" : "n/a"}.`
+      ? proof.proved
+        ? `Proved the example inference in ${proof.wallMs != null ? (proof.wallMs / 1000).toFixed(2) + "s" : "n/a"}.`
+        : "Not verified locally (partial knowledge base). This will be checked for real when you submit."
       : "No scenario supplied.",
   });
 
