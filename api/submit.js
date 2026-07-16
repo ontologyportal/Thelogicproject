@@ -3,7 +3,7 @@
 // session validated, and opens a PR on the sumo-contributions staging repo.
 // The staging repo's own CI re-runs the same validation gates on the PR.
 const { parseCookies, verify } = require("./_lib/session");
-const { assembleKif, assembleTq, isValidIdentifier } = require("./_lib/kif");
+const { assembleKif, assembleTq, isValidIdentifier, isSingleBalancedForm } = require("./_lib/kif");
 const { openContributionPR } = require("./_lib/github");
 
 const MAX_TEXT_LEN = 4000;
@@ -54,6 +54,16 @@ module.exports = async (req, res) => {
   if (formulas.length > MAX_FORMULAS || formulas.some((f) => typeof f !== "string" || f.length > MAX_TEXT_LEN)) {
     res.writeHead(400, { "Content-Type": "application/json" });
     return res.end(JSON.stringify({ error: "too many or oversized formulas" }));
+  }
+  // Each formula is written raw into the .kif file. This wizard doesn't draft
+  // rules yet (see HANDOFF.md), so in practice every submission sends the
+  // same known-good demo formulas, but the endpoint itself has no way to
+  // enforce that a client only sends what Phase 7 validated. Require each
+  // formula to be exactly one balanced top-level form so a submitted string
+  // cannot inject an unrelated second assertion into the file.
+  if (formulas.some((f) => !isSingleBalancedForm(f))) {
+    res.writeHead(400, { "Content-Type": "application/json" });
+    return res.end(JSON.stringify({ error: "each formula must be a single, well-formed, balanced KIF expression" }));
   }
 
   const kif = assembleKif({ term, parent, everydayName, docString, formulas });

@@ -20,6 +20,29 @@ function escapeKifString(s) {
   return String(s || "").replace(/"/g, "'");
 }
 
+// formulas are written raw (unquoted, unescaped) into the assembled .kif,
+// unlike docString/everydayName. The front-end only ever sends formulas that
+// passed Phase 7, but /api/submit is a public endpoint and nothing stops a
+// client from posting to it directly with hand-crafted formulas, so this is
+// the server-side backstop: each formula must be exactly one balanced
+// top-level form, or a formula like "(foo) (subclass Evil BadParent)" could
+// inject a second, unrelated top-level assertion into the file.
+function isSingleBalancedForm(s) {
+  if (typeof s !== "string") return false;
+  const t = s.trim();
+  if (!t.startsWith("(") || !t.endsWith(")")) return false;
+  let depth = 0;
+  for (let i = 0; i < t.length; i++) {
+    if (t[i] === "(") depth++;
+    else if (t[i] === ")") {
+      depth--;
+      if (depth < 0) return false;
+      if (depth === 0 && i !== t.length - 1) return false;
+    }
+  }
+  return depth === 0;
+}
+
 function assembleKif({ term, parent, everydayName, docString, formulas = [] }) {
   const lines = [
     ";; ============================================================",
@@ -45,4 +68,4 @@ function assembleTq(scenario) {
   return lines.join("\n") + "\n";
 }
 
-module.exports = { assembleKif, assembleTq, isValidIdentifier };
+module.exports = { assembleKif, assembleTq, isValidIdentifier, isSingleBalancedForm };

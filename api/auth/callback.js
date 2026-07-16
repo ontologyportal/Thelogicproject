@@ -4,6 +4,11 @@
 const { parseCookies, setCookie, sign } = require("../_lib/session");
 
 module.exports = async (req, res) => {
+  if (!process.env.GITHUB_CLIENT_SECRET || !process.env.SESSION_SECRET) {
+    res.writeHead(500, { "Content-Type": "text/plain" });
+    return res.end("Sign-in is not configured yet (missing server secrets). See SETUP.md.");
+  }
+
   const url = new URL(req.url, `https://${req.headers.host}`);
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");

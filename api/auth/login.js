@@ -6,10 +6,15 @@ const crypto = require("crypto");
 const { setCookie } = require("../_lib/session");
 
 module.exports = (req, res) => {
+  const clientId = process.env.GITHUB_CLIENT_ID;
+  if (!clientId) {
+    res.writeHead(500, { "Content-Type": "text/plain" });
+    return res.end("Sign-in is not configured yet (missing GITHUB_CLIENT_ID). See SETUP.md.");
+  }
+
   const state = crypto.randomBytes(16).toString("hex");
   setCookie(res, "oauth_state", state, { maxAge: 600 });
 
-  const clientId = process.env.GITHUB_CLIENT_ID;
   const proto = req.headers["x-forwarded-proto"] || "https";
   const redirectUri = `${proto}://${req.headers.host}/api/auth/callback`;
   const url =
