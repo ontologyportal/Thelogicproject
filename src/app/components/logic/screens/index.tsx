@@ -663,7 +663,7 @@ export function P7VerifyScreen({
   const [proof, setProof] = useState<ProofResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const attemptGates = () => {
     let cancelled = false;
     setGates(CHECKING);
     setError(null);
@@ -678,6 +678,11 @@ export function P7VerifyScreen({
         setError(String(e.message || e));
       });
     return () => { cancelled = true; };
+  };
+
+  useEffect(() => {
+    const cancel = attemptGates();
+    return cancel;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -765,9 +770,16 @@ export function P7VerifyScreen({
 
           {error && (
             <div className="mb-6 p-3 rounded-lg border border-red-500/40 bg-red-500/10 text-[12px] text-red-300">
-              Could not reach the validator backend ({error}). Start it with{" "}
-              <code className="font-mono">node server/index.js</code> and set{" "}
+              Validation could not run ({error}). This normally runs in your browser with no setup needed;
+              if it keeps failing, a network or ad-blocker issue may be preventing the checker from loading, or a
+              local validator backend needs to be running and reachable at{" "}
               <code className="font-mono">VITE_API_BASE_URL</code>.
+              <button
+                onClick={attemptGates}
+                className="ml-2 px-2 py-0.5 text-[11px] bg-red-500/20 hover:bg-red-500/30 rounded text-red-200"
+              >
+                Retry
+              </button>
             </div>
           )}
 
