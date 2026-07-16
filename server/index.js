@@ -15,6 +15,12 @@ const { spawnSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
+const sigmaWasm = require("./sigma");
+
+// Default validator is the in-process `sigmakee` wasm engine (KB held
+// resident). Set USE_SIGMA_VV=1 to fall back to the legacy sigma-vv shell-out
+// (Java SigmaKEE + Vampire, reloads the KB per call).
+const USE_SIGMA_VV = process.env.USE_SIGMA_VV === "1";
 
 // --- config (all overridable by env) ------------------------------------
 const PORT = parseInt(process.env.PORT || "8788", 10);
@@ -24,7 +30,8 @@ const SIGMA_HOME = process.env.SIGMA_HOME || "/home/devcontainers/.sigmakee";
 const TMP_DIR = path.join(WORKSPACE, "sumo", "development", "wizard-tmp");
 const PROVE_TIMEOUT_MS = parseInt(process.env.PROVE_TIMEOUT_MS || "180000", 10);
 
-fs.mkdirSync(TMP_DIR, { recursive: true });
+// Only the sigma-vv fallback writes temp .kif/.tq files; the wasm engine doesn't.
+if (USE_SIGMA_VV) fs.mkdirSync(TMP_DIR, { recursive: true });
 
 const scriptEnv = { ...process.env, SIGMA_HOME };
 
@@ -194,34 +201,40 @@ const server = http.createServer(async (req, res) => {
   if (req.method === "OPTIONS") return send(res, 204, {});
   const url = req.url.split("?")[0];
 
-  if (req.method === "GET" && url === "/health") {
-    return send(res, 200, { ok: true, sigmaHome: SIGMA_HOME, sigmaVv: SIGMA_VV });
-  }
+  try {
+    if (req.method === "GET" && url === "/health") {
+      return send(res, 200, { ok: true, engine: USE_SIGMA_VV ? "sigma-vv" : "sigmakee-wasm" });
+    }
 
-  if (req.method === "POST" && url === "/api/typecheck") {
-    const { formula } = await readBody(req);
-    if (!formula) return send(res, 400, { error: "formula required" });
-    return send(res, 200, typecheck(formula));
-  }
+    if (req.method === "POST" && url === "/api/typecheck") {
+      const { formula } = await readBody(req);
+      if (!formula) return send(res, 400, { error: "formula required" });
+      return send(res, 200, USE_SIGMA_VV ? typecheck(formula) : await sigmaWasm.typecheck(formula));
+    }
 
-  if (req.method === "POST" && url === "/api/prove") {
-    const body = await readBody(req);
-    if (!body.query) return send(res, 400, { error: "scenario.query required" });
-    return send(res, 200, prove(body, body.term || "wizard", body.tag || "prove"));
-  }
+    if (req.method === "POST" && url === "/api/prove") {
+      const body = await readBody(req);
+      if (!body.query) return send(res, 400, { error: "scenario.query required" });
+      return send(res, 200,
+        USE_SIGMA_VV ? prove(body, body.term || "wizard", body.tag || "prove") : await sigmaWasm.prove(body));
+    }
 
-  if (req.method === "POST" && url === "/api/gates") {
-    const body = await readBody(req);
-    console.log(`[gates] formulas=${(body.formulas || []).length} scenario=${body.scenario ? "yes" : "no"}`);
-    return send(res, 200, runGates(body));
-  }
+    if (req.method === "POST" && url === "/api/gates") {
+      const body = await readBody(req);
+      console.log(`[gates] formulas=${(body.formulas || []).length} scenario=${body.scenario ? "yes" : "no"}`);
+      return send(res, 200, USE_SIGMA_VV ? runGates(body) : await sigmaWasm.gates(body));
+    }
 
-  return send(res, 404, { error: "not found" });
+    return send(res, 404, { error: "not found" });
+  } catch (e) {
+    console.error("[error]", e);
+    return send(res, 500, { error: String(e && e.message || e) });
+  }
 });
 
 server.listen(PORT, () => {
   console.log(`Logic Project validator API on http://localhost:${PORT}`);
-  console.log(`  WORKSPACE=${WORKSPACE}`);
-  console.log(`  SIGMA_HOME=${SIGMA_HOME}`);
+  console.log(`  engine: ${USE_SIGMA_VV ? "sigma-vv (Java SigmaKEE + Vampire)" : "sigmakee-wasm (in-process)"}`);
   console.log(`  endpoints: GET /health  POST /api/typecheck  POST /api/prove  POST /api/gates`);
+  if (!USE_SIGMA_VV) sigmaWasm.getSession().catch((e) => console.warn("[sigma] warm-up failed:", e.message));
 });

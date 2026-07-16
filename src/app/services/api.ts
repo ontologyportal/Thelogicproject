@@ -41,8 +41,19 @@ export interface GatesRequest {
   scenario?: Scenario;
 }
 
-/** Run the real validation gates (syntax + Vampire proof) against the backend. */
+// Prefer the in-browser sigmakee engine (no backend needed); set
+// VITE_LOCAL_SIGMA=0 to force the remote validator API instead.
+const USE_LOCAL = import.meta.env.VITE_LOCAL_SIGMA !== "0";
+
+/** Run the validation gates (syntax + proof). In-browser by default. */
 export async function runGates(req: GatesRequest): Promise<GatesResponse> {
+  if (USE_LOCAL) {
+    try {
+      return await (await import("./sigma")).runGatesLocal(req);
+    } catch (e) {
+      if (!API_BASE) throw e;
+    }
+  }
   const res = await fetch(`${API_BASE}/api/gates`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -52,8 +63,15 @@ export async function runGates(req: GatesRequest): Promise<GatesResponse> {
   return res.json();
 }
 
-/** Syntax/type-check a single SUO-KIF formula. */
+/** Syntax/type-check a single SUO-KIF formula. In-browser by default. */
 export async function typecheck(formula: string): Promise<{ valid: boolean; detail: string }> {
+  if (USE_LOCAL) {
+    try {
+      return await (await import("./sigma")).typecheckLocal(formula);
+    } catch (e) {
+      if (!API_BASE) throw e;
+    }
+  }
   const res = await fetch(`${API_BASE}/api/typecheck`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
