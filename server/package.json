@@ -2,9 +2,12 @@
   "name": "logic-project-validator-api",
   "version": "0.1.0",
   "private": true,
-  "description": "Local API bridging the wizard front-end to the real SUMO validators (SigmaKEE + Vampire) via tools/sigma-vv scripts. Zero dependencies.",
+  "description": "Local API bridging the wizard front-end to SUMO validation/proving. Default engine is the in-process sigmakee wasm package (KB held resident); USE_SIGMA_VV=1 falls back to the sigma-vv shell-out (Java SigmaKEE + Vampire).",
   "type": "commonjs",
   "scripts": {
     "start": "node index.js"
+  },
+  "dependencies": {
+    "sigmakee": "^2.1.2"
   }
 }
