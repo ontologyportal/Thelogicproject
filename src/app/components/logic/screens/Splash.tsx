@@ -40,6 +40,7 @@ export function SplashScreen({
   const handleGuestContinue = () => {
     setAuthStatus("guest");
     onAuthChange("guest");
+    onStart();
   };
 
   const handleCTAClick = () => {
