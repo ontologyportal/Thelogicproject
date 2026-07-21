@@ -91,22 +91,23 @@ crediting the real user in the commit message, PR title, and `meta.json`.
 
 ## Run it locally
 
-Two processes:
+One process, no local SUMO/SigmaKEE/Vampire install needed:
 
 ```bash
-# 1. Backend (needs the SUMO workspace + SigmaKEE + Vampire on this machine)
-cd server
-SIGMA_HOME=~/.sigmakee node index.js        # serves http://localhost:8788
-
-# 2. Front-end
 npm install
 npm run dev                                  # http://localhost:5173
-# .env already points VITE_API_BASE_URL at http://localhost:8788
 ```
 
-Walk to Phase 7: the gates call the backend and a real Vampire `Theorem` comes
-back. The demo term is `SoftwareBug -> Defective` (a self-contained inference that
-proves reliably and fast).
+Phase 7 runs a real Vampire proof **in-browser via WASM** by default (see
+`src/app/services/sigma.ts`) — nothing else to start. Walk to Phase 7 and hit
+Verify: the gates run client-side and a real Vampire `Theorem` comes back. The
+demo term is `SoftwareBug -> Defective` (a self-contained inference that proves
+reliably and fast, in well under a second).
+
+The Node backend below (`server/index.js`) is an older, optional path — only
+needed if you explicitly set `VITE_LOCAL_SIGMA=0` to force the wizard at a
+remote validator API instead of the in-browser engine. Not required for normal
+local dev or for the classroom stress-test.
 
 ## Hosting
 
