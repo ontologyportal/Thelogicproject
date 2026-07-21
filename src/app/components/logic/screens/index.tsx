@@ -14,6 +14,8 @@ import { Copy, Twitter, Link } from "lucide-react";
 import {
   runGates,
   submitContribution,
+  draftFields,
+  draftStatements,
   DEMO_TERM,
   type Gate,
   type ProofResult,
@@ -56,10 +58,10 @@ export function P4PlaceScreen({
   const advanceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const demoContent = {
-    mic: "Voice recording demo: [Demo audio captured: 14 seconds. Transcription: 'It's like a financial instrument but specifically for environmental credits…']",
-    image: "Image demo: [Demo image uploaded: hierarchy-sketch.jpg. The system has identified visual features: tree diagram, parent-child relationships, annotation arrows.]",
-    upload: "File demo: [Demo file uploaded: taxonomy-draft.docx, 1 page. The system has extracted key terms: classification, inheritance, specialization.]",
-    link: "Link demo: [Demo URL: ontology-patterns.org/hierarchy-design. The system has parsed the page summary.]",
+    mic: "Voice input: describe out loud how your concept differs from its parent. Not wired yet in this preview: type it instead.",
+    image: "Image input: upload a photo or diagram and the system describes what it sees. Not wired yet in this preview: describe it in words instead.",
+    upload: "File input: attach a document and the system pulls out the relevant concepts. Not wired yet in this preview: paste the key details in instead.",
+    link: "Link input: paste a URL and the system reads and summarizes the page. Not wired yet in this preview: summarize it yourself instead.",
   };
 
   const handleAnswer = (answer: string) => {
@@ -116,13 +118,13 @@ export function P4PlaceScreen({
                     isWaiting
                       ? "bg-[#1a1a26]/40 opacity-40 border-[#2a2a3a]"
                       : isCurrent
-                      ? "bg-gradient-to-br from-amber-500/10 to-amber-500/5 border-amber-500/30"
-                      : "bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border-emerald-500/30 opacity-60"
+                      ? "bg-[#13131c] border-[#3a3a4a]"
+                      : "bg-[#13131c]/60 border-[#2a2a3a] opacity-60"
                   }`}
                 >
                   {isDone ? (
-                    <p className="text-[12px] text-emerald-400">
-                      ✓ Answered: <strong>{answers[idx]}</strong>
+                    <p className="text-[12px] text-[#a0a0b0]">
+                      ✓ Answered: <strong className="text-[#e0e0e8]">{answers[idx]}</strong>
                     </p>
                   ) : isCurrent ? (
                     <>
@@ -134,7 +136,7 @@ export function P4PlaceScreen({
                           onClick={() => handleAnswer("yes")}
                           className={`flex-1 py-2 rounded-md text-[12px] border transition-colors ${
                             selectedAnswer === "yes"
-                              ? "bg-blue-500 border-blue-500 text-white"
+                              ? "bg-[#e0e0e8] border-[#e0e0e8] text-[#0a0a14]"
                               : "bg-[#1a1a26] border-[#2a2a3a] text-[#a0a0b0] hover:border-[#3a3a4a]"
                           }`}
                         >
@@ -144,7 +146,7 @@ export function P4PlaceScreen({
                           onClick={() => handleAnswer("no")}
                           className={`flex-1 py-2 rounded-md text-[12px] border transition-colors ${
                             selectedAnswer === "no"
-                              ? "bg-blue-500 border-blue-500 text-white"
+                              ? "bg-[#e0e0e8] border-[#e0e0e8] text-[#0a0a14]"
                               : "bg-[#1a1a26] border-[#2a2a3a] text-[#a0a0b0] hover:border-[#3a3a4a]"
                           }`}
                         >
@@ -166,7 +168,7 @@ export function P4PlaceScreen({
               <div className="mb-4 p-3 bg-[#1a1a26] border border-[#2a2a3a] rounded-lg">
                 <p className="text-[11px] mb-2 text-[#a0a0b0]">Preview hierarchy:</p>
                 <p className="text-[12px] text-[#c0c0c8] font-mono">
-                  Entity → PhysicalObject → <span className="text-[#a0a0b0]">{proposedParent}</span> → <span className="underline text-blue-400">{termName}</span>
+                  Entity → PhysicalObject → <span className="text-[#a0a0b0]">{proposedParent}</span> → <span className="underline text-[#e0e0e8]">{termName}</span>
                 </p>
               </div>
 
@@ -204,7 +206,7 @@ export function P4PlaceScreen({
             </p>
             <button
               onClick={() => setDemoModal(null)}
-              className="w-full py-2 bg-blue-500 hover:bg-blue-600 rounded-md text-[13px] text-white mb-3"
+              className="w-full py-2 bg-[#e0e0e8] hover:bg-white rounded-md text-[13px] text-[#0a0a14] mb-3"
             >
               Got it
             </button>
@@ -225,10 +227,14 @@ export function P5DefineScreen({
   onNext,
   onBack,
   onFieldsChange,
+  description,
+  scenario,
 }: {
   onNext: () => void;
   onBack?: () => void;
   onFieldsChange?: (fields: { parent: string; everydayName: string; docString: string }) => void;
+  description?: string;
+  scenario?: string;
 }) {
   const [accepted, setAccepted] = useState<boolean[]>([false, false, false]);
   const [edited, setEdited] = useState<boolean[]>([false, false, false]);
@@ -236,12 +242,15 @@ export function P5DefineScreen({
   const [editValue, setEditValue] = useState("");
   const [showRecycleModal, setShowRecycleModal] = useState(false);
   const [demoModal, setDemoModal] = useState<string | null>(null);
+  const [isDrafting, setIsDrafting] = useState(false);
+  const [draftedByAI, setDraftedByAI] = useState(false);
+  const [draftError, setDraftError] = useState<string | null>(null);
 
   const demoContent = {
-    mic: "Voice recording demo: [Demo audio captured: 21 seconds. Transcription: 'I think the parent category is too broad, maybe I need to be more specific about the domain…']",
-    image: "Image demo: [Demo image uploaded: definition-example.png. The system has identified visual features: dictionary entry, formal definition structure, example usage.]",
-    upload: "File demo: [Demo file uploaded: glossary-terms.csv, 15 rows. The system has extracted key terms: definition, parent class, attributes.]",
-    link: "Link demo: [Demo URL: terminology-standards.org/best-practices. The system has parsed the page summary.]",
+    mic: "Voice input: talk through why a suggested field is wrong and the system revises it. Not wired yet in this preview: type it instead.",
+    image: "Image input: upload a photo or diagram and the system describes what it sees. Not wired yet in this preview: describe it in words instead.",
+    upload: "File input: attach a document and the system pulls out the relevant concepts. Not wired yet in this preview: paste the key details in instead.",
+    link: "Link input: paste a URL and the system reads and summarizes the page. Not wired yet in this preview: summarize it yourself instead.",
   };
 
   const initialFields = [
@@ -251,6 +260,31 @@ export function P5DefineScreen({
   ];
 
   const [fieldValues, setFieldValues] = useState(initialFields.map(f => f.value));
+
+  // Draft real suggestions from the Phase 1 description via GenAI-MIL
+  // (Gemini). Falls back silently to the static placeholders above if this
+  // isn't configured or the call fails — never blocks the wizard.
+  useEffect(() => {
+    if (!description || !description.trim()) return;
+    let cancelled = false;
+    setIsDrafting(true);
+    setDraftError(null);
+    draftFields(description, scenario)
+      .then((fields) => {
+        if (cancelled) return;
+        setFieldValues([fields.parent, fields.everydayName, fields.docString]);
+        setDraftedByAI(true);
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        setDraftError(String(e.message || e));
+      })
+      .finally(() => {
+        if (!cancelled) setIsDrafting(false);
+      });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     // Only lift fields the user has actually confirmed — the initial values
@@ -296,6 +330,22 @@ export function P5DefineScreen({
           title="Phase 5. Define the term"
           subtitle="review our suggestions and edit if needed"
         >
+          {isDrafting && (
+            <div className="mb-4 p-3 bg-[#1a1a26] border border-[#2a2a3a] rounded-lg flex items-center gap-2 text-[12px] text-[#a0a0b0]">
+              <span className="inline-block animate-spin">↻</span>
+              Drafting from your description with Gemini (GenAI-MIL)…
+            </div>
+          )}
+          {draftedByAI && !isDrafting && (
+            <div className="mb-4 text-[11px] text-[#717182]">
+              Drafted from your Phase 1 description via Gemini 2.5 Flash (GenAI-MIL).
+            </div>
+          )}
+          {draftError && !isDrafting && (
+            <div className="mb-4 text-[11px] text-[#717182]">
+              Could not reach the drafting service ({draftError}). Showing placeholders below.
+            </div>
+          )}
           {initialFields.map((field, idx) => {
             const isEditing = editingIndex === idx;
             const isEdited = edited[idx];
@@ -309,7 +359,7 @@ export function P5DefineScreen({
                 <label className="text-[10px] uppercase tracking-wider text-[#717182] mb-1 block">
                   {field.label}
                   <span className="text-[10px] text-[#555] normal-case ml-1">({field.gloss})</span>
-                  {isEdited && <span className="ml-2 text-[10px] text-emerald-400">✓ edited</span>}
+                  {isEdited && <span className="ml-2 text-[10px] text-[#a0a0b0]">✓ edited</span>}
                 </label>
 
                 {isEditing ? (
@@ -318,12 +368,12 @@ export function P5DefineScreen({
                       value={editValue}
                       onChange={(e) => setEditValue(e.target.value)}
                       rows={3}
-                      className="w-full bg-[#13131c] border border-[#2a2a3a] rounded-lg px-3 py-2 text-[13px] mb-2 outline-none resize-none focus:border-blue-500/40 text-[#e0e0e8]"
+                      className="w-full bg-[#13131c] border border-[#2a2a3a] rounded-lg px-3 py-2 text-[13px] mb-2 outline-none resize-none focus:border-[#717182] text-[#e0e0e8]"
                     />
                     <div className="flex gap-2">
                       <button
                         onClick={handleSave}
-                        className="px-3 py-1.5 text-[11px] rounded-md bg-blue-500 hover:bg-blue-600 text-white"
+                        className="px-3 py-1.5 text-[11px] rounded-md bg-[#e0e0e8] hover:bg-white text-[#0a0a14]"
                       >
                         Save
                       </button>
@@ -356,7 +406,7 @@ export function P5DefineScreen({
                         }}
                         className={`px-3 py-1.5 text-[11px] rounded-md ${
                           isAccepted
-                            ? "bg-blue-500 text-white"
+                            ? "bg-[#e0e0e8] text-[#0a0a14]"
                             : "bg-[#13131c] border border-[#2a2a3a] text-[#a0a0b0] hover:border-[#3a3a4a]"
                         }`}
                       >
@@ -412,7 +462,7 @@ export function P5DefineScreen({
                   setShowRecycleModal(false);
                   // In real app, would navigate to P1
                 }}
-                className="flex-1 py-2 bg-red-500/20 border border-red-500/40 hover:bg-red-500/30 rounded-md text-[13px] text-red-400"
+                className="flex-1 py-2 bg-transparent border-2 border-[#e0e0e8] hover:bg-white/5 rounded-md text-[13px] text-[#e0e0e8] font-medium"
               >
                 Discard and restart
               </button>
@@ -433,7 +483,7 @@ export function P5DefineScreen({
             </p>
             <button
               onClick={() => setDemoModal(null)}
-              className="w-full py-2 bg-blue-500 hover:bg-blue-600 rounded-md text-[13px] text-white mb-3"
+              className="w-full py-2 bg-[#e0e0e8] hover:bg-white rounded-md text-[13px] text-[#0a0a14] mb-3"
             >
               Got it
             </button>
@@ -453,14 +503,18 @@ export function P5DefineScreen({
 export function P6StatementsScreen({
   onNext,
   onBack,
+  termName = "your concept",
+  description = "",
 }: {
   onNext: () => void;
   onBack?: () => void;
+  termName?: string;
+  description?: string;
 }) {
   const [statements, setStatements] = useState([
-    { text: "If something is a [YourConcept], then [property 1].", approved: false },
-    { text: "[YourConcept] has [property 2].", approved: false },
-    { text: "[YourConcept] relates to [property 3].", approved: false },
+    { text: `If something is a ${termName}, then [property 1].`, approved: false },
+    { text: `${termName} has [property 2].`, approved: false },
+    { text: `${termName} relates to [property 3].`, approved: false },
   ]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editText, setEditText] = useState("");
@@ -468,12 +522,32 @@ export function P6StatementsScreen({
   const [isLoading, setIsLoading] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [demoModal, setDemoModal] = useState<string | null>(null);
+  const [isDrafting, setIsDrafting] = useState(false);
+
+  useEffect(() => {
+    if (!description.trim()) return;
+    let cancelled = false;
+    setIsDrafting(true);
+    draftStatements(termName, description)
+      .then((drafted) => {
+        if (cancelled || drafted.length === 0) return;
+        setStatements(drafted.map((text) => ({ text, approved: false })));
+      })
+      .catch(() => {
+        // Falls back to the static placeholder statements above.
+      })
+      .finally(() => {
+        if (!cancelled) setIsDrafting(false);
+      });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const demoContent = {
-    mic: "Voice recording demo: [Demo audio captured: 18 seconds. Transcription: 'Actually that second statement isn't quite right, it should say that it implies a time-based pattern…']",
-    image: "Image demo: [Demo image uploaded: logic-correction.jpg. The system has identified visual features: crossed-out text, handwritten edits, revision marks.]",
-    upload: "File demo: [Demo file uploaded: statement-revisions.txt, 2 pages. The system has extracted key terms: implication, logical consequence, refinement.]",
-    link: "Link demo: [Demo URL: logic-patterns.org/statement-quality. The system has parsed the page summary.]",
+    mic: "Voice input: talk through how a statement should be corrected and the system revises it. Not wired yet in this preview: type it instead.",
+    image: "Image input: upload a photo or diagram and the system describes what it sees. Not wired yet in this preview: describe it in words instead.",
+    upload: "File input: attach a document and the system pulls out the relevant concepts. Not wired yet in this preview: paste the key details in instead.",
+    link: "Link input: paste a URL and the system reads and summarizes the page. Not wired yet in this preview: summarize it yourself instead.",
   };
 
   const handleEdit = (idx: number) => {
@@ -514,10 +588,16 @@ export function P6StatementsScreen({
           title="Phase 6. Statements from your description"
           subtitle="approve each statement we extracted"
         >
+          {isDrafting && (
+            <div className="mb-4 p-3 bg-[#1a1a26] border border-[#2a2a3a] rounded-lg flex items-center gap-2 text-[12px] text-[#a0a0b0]">
+              <span className="inline-block animate-spin">↻</span>
+              Drafting statements with Gemini (GenAI-MIL)…
+            </div>
+          )}
           {isLoading && (
-            <div className="mb-4 p-4 bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/30 rounded-lg flex items-center gap-3">
+            <div className="mb-4 p-4 bg-[#13131c] border border-[#2a2a3a] rounded-lg flex items-center gap-3">
               <div className="animate-spin">
-                <div className="size-8 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-500/30 flex items-center justify-center">
+                <div className="size-8 rounded-full bg-gradient-to-br from-[#2a2a3a] to-[#13131c] border border-[#3a3a4a] flex items-center justify-center">
                   🤼
                 </div>
               </div>
@@ -530,7 +610,7 @@ export function P6StatementsScreen({
               key={idx}
               className={`mb-3 p-3 rounded-lg ${
                 editingIndex === idx
-                  ? "bg-blue-500/10 border-2 border-blue-500/40"
+                  ? "bg-white/5 border-2 border-[#717182]"
                   : "bg-[#1a1a26] border border-[#2a2a3a]"
               }`}
             >
@@ -545,7 +625,7 @@ export function P6StatementsScreen({
                   }}
                   className={`px-3 py-1.5 text-[11px] rounded-md ${
                     statement.approved
-                      ? "bg-blue-500 text-white"
+                      ? "bg-[#e0e0e8] text-[#0a0a14]"
                       : "bg-[#13131c] border border-[#2a2a3a] text-[#a0a0b0] hover:border-[#3a3a4a]"
                   }`}
                 >
@@ -559,7 +639,7 @@ export function P6StatementsScreen({
                 </button>
                 <button
                   onClick={() => handleDrop(idx)}
-                  className="px-3 py-1.5 text-[11px] rounded-md bg-red-500/20 border border-red-500/40 text-red-400 hover:bg-red-500/30"
+                  className="px-3 py-1.5 text-[11px] rounded-md bg-transparent border border-[#3a3a4a] text-[#a0a0b0] hover:border-[#e0e0e8] hover:text-[#e0e0e8]"
                 >
                   C · drop
                 </button>
@@ -569,7 +649,7 @@ export function P6StatementsScreen({
 
           {editingIndex !== null && (
             <div className="mb-4">
-              <p className="text-[11px] text-blue-400 mb-2">↑ Refine the highlighted statement above:</p>
+              <p className="text-[11px] text-[#a0a0b0] mb-2">↑ Refine the highlighted statement above:</p>
               <RefineBox
                 value={editText}
                 onChange={setEditText}
@@ -582,7 +662,7 @@ export function P6StatementsScreen({
               />
               <button
                 onClick={handleSubmitEdit}
-                className="mt-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-md text-[12px] text-white"
+                className="mt-2 px-4 py-2 bg-[#e0e0e8] hover:bg-white rounded-md text-[12px] text-[#0a0a14]"
               >
                 Submit refinement
               </button>
@@ -598,7 +678,7 @@ export function P6StatementsScreen({
       {/* Toast notification */}
       {showToast && (
         <div className="fixed bottom-4 right-4 bg-[#13131c] border border-[#1f1f2c] rounded-lg shadow-xl p-4 animate-in slide-in-from-bottom-5">
-          <p className="text-[12px] text-emerald-400">Statement dropped. The system will not include it in your definition.</p>
+          <p className="text-[12px] text-[#e0e0e8]">Statement dropped. The system will not include it in your definition.</p>
         </div>
       )}
 
@@ -611,7 +691,7 @@ export function P6StatementsScreen({
             </p>
             <button
               onClick={() => setDemoModal(null)}
-              className="w-full py-2 bg-blue-500 hover:bg-blue-600 rounded-md text-[13px] text-white mb-3"
+              className="w-full py-2 bg-[#e0e0e8] hover:bg-white rounded-md text-[13px] text-[#0a0a14] mb-3"
             >
               Got it
             </button>
@@ -717,7 +797,7 @@ export function P7VerifyScreen({
             <h3 className="text-[11px] uppercase tracking-wider text-[#717182] mb-2">
               {devView ? "Formal Definition (KIF)" : "Natural Language"}
             </h3>
-            <p className={`text-[12px] ${devView ? "font-mono text-blue-300" : "text-[#c0c0c8]"}`}>
+            <p className={`text-[12px] ${devView ? "font-mono text-[#e0e0e8]" : "text-[#c0c0c8]"}`}>
               {displayStatement}
             </p>
           </div>
@@ -726,27 +806,27 @@ export function P7VerifyScreen({
             {gates.map((gate) => {
               const tone =
                 gate.status === "pass"
-                  ? "border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5"
+                  ? "border-[#3a3a4a] bg-[#13131c]"
                   : gate.status === "fail"
-                  ? "border-red-500/40 bg-gradient-to-br from-red-500/10 to-red-500/5"
+                  ? "border-2 border-[#e0e0e8] bg-[#13131c]"
                   : gate.status === "unverified"
-                  ? "border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-amber-500/5"
+                  ? "border border-dashed border-[#3a3a4a] bg-[#13131c]"
                   : gate.status === "skipped"
                   ? "border-[#2a2a3a] bg-[#1a1a26] opacity-60"
                   : "border-[#2a2a3a] bg-[#1a1a26]";
               const textTone =
                 gate.status === "pass"
-                  ? "text-emerald-400"
+                  ? "text-[#e0e0e8]"
                   : gate.status === "fail"
-                  ? "text-red-400"
+                  ? "text-[#e0e0e8] font-medium"
                   : gate.status === "unverified"
-                  ? "text-amber-400"
+                  ? "text-[#e0e0e8]"
                   : gate.status === "skipped"
                   ? "text-[#717182]"
                   : "text-[#c0c0c8]";
               return (
                 <div key={gate.id} className={`p-3 rounded-lg border flex items-start gap-3 ${tone}`}>
-                  <div className="flex-shrink-0 text-[14px] leading-5">
+                  <div className="flex-shrink-0 text-[14px] leading-5 text-[#e0e0e8]">
                     {gate.status === "pass" ? (
                       "✓"
                     ) : gate.status === "fail" ? (
@@ -756,7 +836,7 @@ export function P7VerifyScreen({
                     ) : gate.status === "skipped" ? (
                       "–"
                     ) : (
-                      <span className="inline-block animate-spin text-blue-400">↻</span>
+                      <span className="inline-block animate-spin text-[#e0e0e8]">↻</span>
                     )}
                   </div>
                   <div className="flex-1">
@@ -769,14 +849,14 @@ export function P7VerifyScreen({
           </div>
 
           {error && (
-            <div className="mb-6 p-3 rounded-lg border border-red-500/40 bg-red-500/10 text-[12px] text-red-300">
+            <div className="mb-6 p-3 rounded-lg border-2 border-[#e0e0e8] bg-[#13131c] text-[12px] text-[#e0e0e8]">
               Validation could not run ({error}). This normally runs in your browser with no setup needed;
               if it keeps failing, a network or ad-blocker issue may be preventing the checker from loading, or a
               local validator backend needs to be running and reachable at{" "}
               <code className="font-mono">VITE_API_BASE_URL</code>.
               <button
                 onClick={attemptGates}
-                className="ml-2 px-2 py-0.5 text-[11px] bg-red-500/20 hover:bg-red-500/30 rounded text-red-200"
+                className="ml-2 px-2 py-0.5 text-[11px] bg-white/10 hover:bg-white/20 rounded text-[#e0e0e8]"
               >
                 Retry
               </button>
@@ -787,20 +867,20 @@ export function P7VerifyScreen({
             <div className="mb-6 flex justify-end">
               <button
                 onClick={onSimulateConflict}
-                className="px-3 py-1.5 text-[11px] bg-red-500 hover:bg-red-600 rounded-md text-white"
+                className="px-3 py-1.5 text-[11px] bg-[#e0e0e8] hover:bg-white rounded-md text-[#0a0a14]"
               >
                 Resolve consistency conflict →
               </button>
             </div>
           )}
 
-          <div className="p-4 bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/30 rounded-lg">
-            <p className="text-[11px] font-medium mb-2 text-amber-400">Test scenario from Phase 1</p>
+          <div className="p-4 bg-[#13131c] border border-[#2a2a3a] rounded-lg">
+            <p className="text-[11px] font-medium mb-2 text-[#e0e0e8]">Test scenario from Phase 1</p>
             <p className="text-[12px] text-[#c0c0c8] mb-3">{scenarioNL}</p>
             <div className="flex gap-2">
               <button
                 onClick={() => setShowVerifyModal(true)}
-                className="px-3 py-1.5 text-[11px] bg-blue-500 hover:bg-blue-600 rounded-md text-white"
+                className="px-3 py-1.5 text-[11px] bg-[#e0e0e8] hover:bg-white rounded-md text-[#0a0a14]"
               >
                 ▶ Verify
               </button>
@@ -837,16 +917,16 @@ export function P7VerifyScreen({
           <div className="bg-[#13131c] border border-[#1f1f2c] rounded-lg shadow-xl max-w-lg w-full mx-4 p-6">
             {proof?.proved ? (
               <>
-                <h3 className="text-[15px] font-medium text-emerald-400 mb-3">✓ Verification complete</h3>
+                <h3 className="text-[15px] font-medium text-[#e0e0e8] mb-3">✓ Verification complete</h3>
                 <p className="text-[13px] text-[#c0c0c8] mb-4 leading-relaxed">
-                  The prover returned <strong className="text-emerald-400">{proof.szs}</strong>
+                  The prover returned <strong className="text-[#e0e0e8]">{proof.szs}</strong>
                   {proof.wallMs ? ` in ${(proof.wallMs / 1000).toFixed(1)}s` : ""}. The example inference is
                   formally entailed by your definition, checked by an automated theorem prover.
                 </p>
               </>
             ) : (
               <>
-                <h3 className="text-[15px] font-medium text-amber-400 mb-3">? Not verified locally</h3>
+                <h3 className="text-[15px] font-medium text-[#e0e0e8] mb-3">? Not verified locally</h3>
                 <p className="text-[13px] text-[#c0c0c8] mb-4 leading-relaxed">
                   The local prover could not confirm this inference{proof?.szs ? ` (${proof.szs})` : ""}, which
                   can happen with a partial knowledge base and doesn't mean it's wrong. This gets checked for
@@ -856,7 +936,7 @@ export function P7VerifyScreen({
             )}
             <button
               onClick={() => setShowVerifyModal(false)}
-              className="w-full py-2 bg-blue-500 hover:bg-blue-600 rounded-md text-[13px] text-white mb-3"
+              className="w-full py-2 bg-[#e0e0e8] hover:bg-white rounded-md text-[13px] text-[#0a0a14] mb-3"
             >
               Got it
             </button>
@@ -882,7 +962,7 @@ export function P7VerifyScreen({
             </ul>
             <button
               onClick={() => setShowAIModal(false)}
-              className="w-full py-2 bg-blue-500 hover:bg-blue-600 rounded-md text-[13px] text-white mb-3"
+              className="w-full py-2 bg-[#e0e0e8] hover:bg-white rounded-md text-[13px] text-[#0a0a14] mb-3"
             >
               Got it
             </button>
@@ -924,7 +1004,7 @@ export function SubmitScreen({
     const burst = {
       origin: { x: 0.5, y: 0.7 },
       spread: 70,
-      colors: ["#10b981", "#3b82f6", "#f59e0b"],
+      colors: ["#e0e0e8", "#a0a0b0", "#717182"],
     };
     confetti({ ...burst, particleCount: 80 });
     const t = setTimeout(() => confetti({ ...burst, particleCount: 50 }), 400);
@@ -976,7 +1056,7 @@ export function SubmitScreen({
   };
 
   const tweetText = encodeURIComponent(
-    "Just contributed to The Logic Project — an open knowledge base anyone can use to reason about the world"
+    "Just contributed to The Logic Project, an open knowledge base anyone can use to reason about the world"
   );
   const statementCount = contribution?.formulas.length ?? 3;
 
@@ -986,7 +1066,7 @@ export function SubmitScreen({
         <div className="flex-1 overflow-auto">
           <Frame title="Submitting your contribution" subtitle="opening a pull request on GitHub">
             <div className="flex items-center gap-3 p-5 bg-[#1a1a26] border border-[#2a2a3a] rounded-lg">
-              <span className="inline-block animate-spin text-blue-400 text-[16px]">↻</span>
+              <span className="inline-block animate-spin text-[#e0e0e8] text-[16px]">↻</span>
               <p className="text-[13px] text-[#c0c0c8]">
                 Assembling {termName} and opening a pull request against the contribution repo…
               </p>
@@ -1003,11 +1083,11 @@ export function SubmitScreen({
       <div className="h-full flex flex-col bg-[#13131c] text-[#e0e0e8]">
         <div className="flex-1 overflow-auto">
           <Frame title="Submission failed" subtitle="your work is not lost">
-            <div className="p-5 bg-red-500/10 border border-red-500/30 rounded-lg mb-4">
-              <p className="text-[13px] text-red-300 mb-3">{errorMsg}</p>
+            <div className="p-5 bg-[#13131c] border-2 border-[#e0e0e8] rounded-lg mb-4">
+              <p className="text-[13px] text-[#e0e0e8] mb-3">{errorMsg}</p>
               <button
                 onClick={attemptSubmit}
-                className="px-3 py-1.5 text-[11px] bg-blue-500 hover:bg-blue-600 rounded-md text-white"
+                className="px-3 py-1.5 text-[11px] bg-[#e0e0e8] hover:bg-white rounded-md text-[#0a0a14]"
               >
                 Try again
               </button>
@@ -1027,7 +1107,7 @@ export function SubmitScreen({
           subtitle="your contribution is on its way"
         >
           {/* Summary card */}
-          <div className="mb-6 p-5 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/30 rounded-lg animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="mb-6 p-5 bg-[#13131c] border border-[#2a2a3a] rounded-lg animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex items-center gap-2 mb-4">
               <motion.span
                 initial={{ scale: 0 }}
@@ -1037,7 +1117,7 @@ export function SubmitScreen({
               >
                 🎉
               </motion.span>
-              <h3 className="text-[16px] font-medium text-emerald-400">Your contribution is on its way</h3>
+              <h3 className="text-[16px] font-medium text-[#e0e0e8]">Your contribution is on its way</h3>
             </div>
 
             <div className="space-y-2 mb-4">
@@ -1061,7 +1141,7 @@ export function SubmitScreen({
                   href={prResult.prUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-400 hover:text-blue-300 underline underline-offset-2"
+                  className="text-[#e0e0e8] hover:text-white underline underline-offset-2"
                 >
                   PR #{prResult.prNumber}
                 </a>
@@ -1082,7 +1162,7 @@ export function SubmitScreen({
                 <Copy className="size-3" />
                 Copy link
                 {copiedLink && (
-                  <span className="ml-1 text-emerald-400 animate-in fade-in duration-200">Copied</span>
+                  <span className="ml-1 text-[#e0e0e8] animate-in fade-in duration-200">Copied</span>
                 )}
               </button>
 
@@ -1101,7 +1181,7 @@ export function SubmitScreen({
                 <Link className="size-3" />
                 Copy markdown
                 {copiedMd && (
-                  <span className="ml-1 text-emerald-400 animate-in fade-in duration-200">Copied</span>
+                  <span className="ml-1 text-[#e0e0e8] animate-in fade-in duration-200">Copied</span>
                 )}
               </button>
             </div>
@@ -1114,7 +1194,7 @@ export function SubmitScreen({
               Suggested next term (also missing from the knowledge base):
             </label>
             <div className="flex gap-2">
-              <button className="px-3 py-1.5 text-[12px] bg-blue-500 hover:bg-blue-600 rounded-md text-white">
+              <button className="px-3 py-1.5 text-[12px] bg-[#e0e0e8] hover:bg-white rounded-md text-[#0a0a14]">
                 [SuggestedNextTerm]
               </button>
               <select className="px-3 py-1.5 text-[12px] bg-[#13131c] border border-[#2a2a3a] rounded-md text-[#a0a0b0]">
@@ -1127,7 +1207,7 @@ export function SubmitScreen({
           <div className="flex gap-2">
             <button
               onClick={onRestart}
-              className="flex-1 py-3 bg-blue-500 hover:bg-blue-600 rounded-md text-[13px] text-white"
+              className="flex-1 py-3 bg-[#e0e0e8] hover:bg-white rounded-md text-[13px] text-[#0a0a14]"
             >
               Yes. Back to Phase 1 with this term.
             </button>

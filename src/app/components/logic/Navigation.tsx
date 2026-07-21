@@ -1,5 +1,5 @@
-import { UserCircle2, Github, ChevronRight } from "lucide-react";
-import { PHASES, type PhaseId } from "./shared";
+import { UserCircle2, Github, ChevronRight, ChevronLeft } from "lucide-react";
+import { PHASES, type PhaseId, Mark } from "./shared";
 import { Button } from "../ui/button";
 
 /**
@@ -21,16 +21,18 @@ export function TopNavigation({
   const isUnnamed = termName === "[unnamed concept]";
 
   return (
-    <div className="h-12 border-b border-[#1a1a26] bg-[#161622] flex items-center justify-between px-4 flex-shrink-0">
+    <div className="h-14 border-b border-[#1a1a26] bg-[#161622] flex items-center justify-between px-5 flex-shrink-0">
       <div className="flex items-center gap-3">
-        <span className="text-[12px] text-[#a0a0b0]">Your contribution</span>
-        <ChevronRight className="size-3 text-[#717182]" />
-        <span className={`text-[12px] ${isUnnamed ? "text-[#717182]" : "text-[#e0e0e8]"}`}>{termName}</span>
-        <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">DRAFT</span>
+        <Mark className="size-4 text-[#717182] flex-shrink-0" />
+        <span className="text-[11px] uppercase tracking-[0.1em] text-[#717182]">Your contribution</span>
+        <ChevronRight className="size-3 text-[#3a3a4a]" />
+        <span className={`text-[12.5px] ${isUnnamed ? "text-[#717182] italic" : "text-[#e0e0e8]"}`}>{termName}</span>
+        <span className="ml-1 text-[10px] px-2 py-0.5 rounded-full bg-[#13131c] text-[#a0a0b0] border border-[#2a2a3a] uppercase tracking-wider">Draft</span>
       </div>
       <div className="flex items-center gap-2">
         {authStatus === "authenticated" && userName ? (
           <div className="flex items-center gap-2 text-[11px] text-[#a0a0b0]">
+            <Github className="size-3.5" />
             <span>Signed in as @{userName}</span>
           </div>
         ) : authStatus === "guest" ? (
@@ -58,10 +60,13 @@ export function FooterNavigation({
   nextLabel?: string;
 }) {
   return (
-    <div className="w-full max-w-[820px] mx-auto px-8 py-4 flex items-center justify-between border-t border-[#1a1a26]">
+    <div className="w-full max-w-[820px] mx-auto px-8 py-5 flex items-center justify-between border-t border-[#1a1a26]">
       {onBack ? (
-        <button className="text-[12px] text-[#a0a0b0] hover:text-white" onClick={onBack}>
-          ← {backLabel}
+        <button
+          className="flex items-center gap-1 text-[12px] text-[#a0a0b0] hover:text-white transition-colors"
+          onClick={onBack}
+        >
+          <ChevronLeft className="size-3.5" /> {backLabel}
         </button>
       ) : (
         <div />
@@ -71,13 +76,13 @@ export function FooterNavigation({
         <button
           onClick={onNext}
           disabled={nextDisabled}
-          className={`px-4 py-2 rounded-md text-[12px] flex items-center gap-2 ${
+          className={`px-5 py-2.5 rounded-full text-[12px] font-medium flex items-center gap-2 transition-colors ${
             nextDisabled
-              ? "bg-blue-500/20 text-blue-400/50 cursor-not-allowed"
-              : "bg-blue-500 hover:bg-blue-600 text-white"
+              ? "bg-[#2a2a3a] text-[#717182] cursor-not-allowed"
+              : "bg-[#e0e0e8] hover:bg-white text-[#0a0a14]"
           }`}
         >
-          {nextLabel} →
+          {nextLabel} <ChevronRight className="size-3.5" />
         </button>
       ) : (
         <div />
@@ -93,11 +98,15 @@ export function PhaseTransition({ open, status = "processing…" }: { open: bool
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0a0a14]/90 backdrop-blur-sm">
-      <div className="flex flex-col items-center gap-4 max-w-md mx-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0a0a14]/90 backdrop-blur-sm overflow-hidden">
+      <div
+        className="absolute inset-0 bg-[radial-gradient(circle,rgba(224,224,232,0.05)_1px,transparent_1px)] bg-[length:26px_26px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_70%)] pointer-events-none"
+        aria-hidden="true"
+      />
+      <div className="relative flex flex-col items-center gap-5 max-w-md mx-4">
         <div className="animate-spin">
           <div
-            className="flex items-center justify-center rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-500/30"
+            className="flex items-center justify-center rounded-full bg-gradient-to-br from-[#2a2a3a] to-[#13131c] border border-[#3a3a4a]"
             style={{ width: 96, height: 96 }}
           >
             <span className="text-4xl" role="img" aria-label="sumo wrestler">
@@ -105,10 +114,13 @@ export function PhaseTransition({ open, status = "processing…" }: { open: bool
             </span>
           </div>
         </div>
-        <p className="text-lg text-[#a0a0b0]">
-          {status}
-        </p>
-        <p className="text-xs italic text-neutral-500 text-center mt-2">
+        <div className="text-center">
+          <p className="text-[10px] uppercase tracking-[0.14em] text-[#717182] mb-2">Working</p>
+          <p className="text-[19px] text-[#e0e0e8] tracking-tight">
+            {status}
+          </p>
+        </div>
+        <p className="text-xs italic text-neutral-500 text-center mt-1 max-w-sm">
           If you type something specific we haven't pre-loaded, we're working on providing tailored feedback for it. This demo uses canned responses.
         </p>
       </div>
@@ -129,8 +141,12 @@ export function StepNavigator({
   onPhaseClick?: (phase: PhaseId) => void;
 }) {
   return (
-    <div className="w-full border-b border-[#1a1a26] bg-[#181826] overflow-x-auto">
-      <div className="flex items-center gap-2 px-4 py-2 min-w-max">
+    <div className="relative w-full border-b border-[#1a1a26] bg-[#181826] overflow-x-auto">
+      <div
+        className="absolute inset-0 bg-[radial-gradient(circle,rgba(224,224,232,0.04)_1px,transparent_1px)] bg-[length:20px_20px] pointer-events-none"
+        aria-hidden="true"
+      />
+      <div className="relative flex items-center gap-2 px-5 py-2.5 min-w-max">
         {PHASES.map((phase) => {
           const isCurrent = phase.id === currentPhase;
           const isCompleted = completedPhases.includes(phase.id);
@@ -140,11 +156,11 @@ export function StepNavigator({
             <button
               key={phase.id}
               onClick={() => onPhaseClick?.(phase.id)}
-              className={`px-3 py-1.5 text-[11px] rounded transition-colors whitespace-nowrap ${
+              className={`px-3.5 py-1.5 text-[10.5px] uppercase tracking-wider rounded-full transition-colors whitespace-nowrap ${
                 isCurrent
-                  ? "bg-amber-400/20 border-2 border-amber-400/60 text-amber-400"
+                  ? "bg-[#e0e0e8] border-2 border-[#e0e0e8] text-[#0a0a14] font-medium"
                   : isCompleted
-                  ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400"
+                  ? "bg-[#13131c] border border-[#3a3a4a] text-[#e0e0e8]"
                   : "border-2 border-dashed border-[#2a2a3a] text-[#717182] hover:border-[#3a3a4a]"
               }`}
             >

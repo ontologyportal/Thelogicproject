@@ -20,8 +20,11 @@ export function P2SearchScreen({
     <div className="h-full flex flex-col bg-[#13131c] text-[#e0e0e8]">
       <div className="flex-1 overflow-auto">
         <div className="w-full max-w-[820px] mx-auto px-8 py-8 flex flex-col items-center justify-center min-h-[60vh]">
-          <h2 className="text-[22px] tracking-tight mb-2">Phase 2. Searching existing terms</h2>
-          <p className="text-[13px] text-[#a0a0b0] mb-6 leading-relaxed">we'll route you automatically</p>
+          <h2 className="text-[26px] leading-[1.15] tracking-tight mb-2.5">Phase 2. Searching existing terms</h2>
+          <p className="flex items-start gap-2 text-[13px] text-[#a0a0b0] mb-8 leading-relaxed">
+            <span className="mt-[7px] size-1.5 rounded-full bg-[#3a3a4a] flex-shrink-0" aria-hidden="true" />
+            we'll route you automatically
+          </p>
 
           <div className="flex flex-col items-center gap-4 py-12">
             <Wrestler size={48} className="animate-spin" />

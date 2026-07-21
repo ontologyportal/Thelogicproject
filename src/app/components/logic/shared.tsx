@@ -8,6 +8,21 @@ import { Badge } from "../ui/badge";
 /* ─────────────────────────── CORE COMPONENTS ─────────────────────────── */
 
 /**
+ * Mark — the brand symbol. A "therefore" (∴) mark with the L point drawn as a
+ * turnstile (⊢), standing in for T / L / P. Inherits color via currentColor.
+ */
+export function Mark({ className = "size-5" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 100 100" className={className} fill="none" aria-hidden="true">
+      <circle cx="50" cy="30" r="7" fill="currentColor" />
+      <circle cx="66" cy="66" r="7" fill="currentColor" />
+      <line x1="28" y1="53" x2="28" y2="79" stroke="currentColor" strokeWidth="6" strokeLinecap="round" />
+      <line x1="28" y1="66" x2="45" y2="66" stroke="currentColor" strokeWidth="6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/**
  * Frame — main content container used across all screens
  * Hi-fi dark mode design from v12
  */
@@ -21,10 +36,21 @@ export function Frame({
   children: ReactNode;
 }) {
   return (
-    <div className="w-full max-w-[820px] mx-auto px-8 py-8">
-      <h2 className="text-[22px] tracking-tight mb-2 text-[#e0e0e8]">{title}</h2>
-      {subtitle && <p className="text-[13px] text-[#a0a0b0] mb-6 leading-relaxed">{subtitle}</p>}
-      {children}
+    <div className="relative w-full max-w-[820px] mx-auto px-8 pt-10 pb-8">
+      <div
+        className="absolute inset-x-0 top-0 h-40 bg-[radial-gradient(circle,rgba(224,224,232,0.05)_1px,transparent_1px)] bg-[length:24px_24px] [mask-image:radial-gradient(ellipse_at_top_left,black,transparent_65%)] pointer-events-none"
+        aria-hidden="true"
+      />
+      <div className="relative">
+        <h2 className="text-[26px] leading-[1.15] tracking-tight mb-2.5 text-[#e0e0e8]">{title}</h2>
+        {subtitle && (
+          <p className="flex items-start gap-2 text-[13px] text-[#a0a0b0] mb-8 leading-relaxed max-w-[560px]">
+            <span className="mt-[7px] size-1.5 rounded-full bg-[#3a3a4a] flex-shrink-0" aria-hidden="true" />
+            {subtitle}
+          </p>
+        )}
+        {children}
+      </div>
     </div>
   );
 }
@@ -81,7 +107,7 @@ export function RefineBox({
   const showBanner = refineState !== "idle";
 
   return (
-    <div className="bg-[#1a1a26] border border-[#2a2a3a] rounded-lg p-3">
+    <div className="bg-[#1a1a26] border border-[#2a2a3a] focus-within:border-[#3a3a4a] rounded-xl p-3.5 transition-colors">
       <div className="flex items-center gap-2">
         <Textarea
           value={value}
@@ -138,8 +164,8 @@ export function RefineBox({
                     disabled={!canRefine}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium transition-colors ${
                       canRefine
-                        ? "bg-blue-500 hover:bg-blue-600 text-white cursor-pointer"
-                        : "bg-blue-500/20 text-blue-400/50 cursor-not-allowed"
+                        ? "bg-[#e0e0e8] hover:bg-white text-[#0a0a14] cursor-pointer"
+                        : "bg-[#2a2a3a] text-[#717182] cursor-not-allowed"
                     }`}
                   >
                     <Send className="size-3" />
@@ -164,15 +190,15 @@ export function RefineBox({
         className={`transition-opacity duration-300 ${showBanner ? "opacity-100 mt-2" : "opacity-0 pointer-events-none h-0 mt-0 overflow-hidden"}`}
       >
         {refineState === "refining" && (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-blue-500/10 border border-blue-500/20">
-            <span className="inline-block animate-spin text-blue-400 text-[13px]">↻</span>
-            <span className="text-[11px] text-blue-300">Regenerating based on your refinement…</span>
+          <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-[#13131c] border border-[#2a2a3a]">
+            <span className="inline-block animate-spin text-[#e0e0e8] text-[13px]">↻</span>
+            <span className="text-[11px] text-[#a0a0b0]">Regenerating based on your refinement…</span>
           </div>
         )}
         {refineState === "success" && (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-emerald-500/10 border border-emerald-500/20">
-            <span className="text-emerald-400 text-[13px]">✓</span>
-            <span className="text-[11px] text-emerald-300">Updated. The next phase has been refined based on your input.</span>
+          <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-[#13131c] border border-[#2a2a3a]">
+            <span className="text-[#e0e0e8] text-[13px]">✓</span>
+            <span className="text-[11px] text-[#a0a0b0]">Updated. The next phase has been refined based on your input.</span>
           </div>
         )}
       </div>
@@ -186,7 +212,7 @@ export function RefineBox({
 export function Wrestler({ size = 56, className = "" }: { size?: number; className?: string }) {
   return (
     <div
-      className={`flex items-center justify-center rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-500/30 ${className}`}
+      className={`flex items-center justify-center rounded-full bg-gradient-to-br from-[#2a2a3a] to-[#13131c] border border-[#3a3a4a] ${className}`}
       style={{ width: size, height: size }}
     >
       <span className="text-2xl" role="img" aria-label="sumo wrestler">
@@ -222,14 +248,14 @@ export function AISuggestionBadge({ variant = "default" }: { variant?: "default"
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-blue-400 cursor-default select-none">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-[#2a2a3a] bg-[#13131c]/70 text-[10px] uppercase tracking-wider text-[#a0a0b0] cursor-default select-none">
             <span aria-hidden>✨</span> {label}
           </span>
         </TooltipTrigger>
         <TooltipContent className="max-w-xs">
           <p className="text-xs leading-relaxed">
             These values were inferred by the AI from your input. Review and edit
-            before approving — the system will not commit them without your
+            before approving. The system will not commit them without your
             confirmation.
           </p>
         </TooltipContent>
@@ -278,7 +304,8 @@ export type PhaseId = (typeof PHASES)[number]["id"];
  */
 export function AppFooter({ isSplash = false }: { isSplash?: boolean }) {
   return (
-    <div className="w-full text-center pt-4 pb-4">
+    <div className="w-full max-w-[820px] mx-auto flex items-center justify-center gap-1.5 text-center border-t border-[#1a1a26] mt-4 pt-5 pb-6">
+      <Mark className="size-3 text-neutral-500" />
       <p className="text-xs text-neutral-500">
         Powered by the{" "}
         <a

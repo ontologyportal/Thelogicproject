@@ -45,7 +45,7 @@ export function ConflictResolutionScreen({
           <div className="space-y-3 mb-5">
             <button
               onClick={onRevise}
-              className="w-full text-left p-4 rounded-lg border border-[#2a2a3a] bg-[#1a1a26] hover:border-blue-500/40 hover:bg-blue-500/5 transition-colors"
+              className="w-full text-left p-4 rounded-lg border border-[#2a2a3a] bg-[#1a1a26] hover:border-[#717182] hover:bg-white/5 transition-colors"
             >
               <p className="text-[14px] font-medium text-[#e0e0e8] mb-1">Revise my definition</p>
               <p className="text-[11px] text-[#717182]">
@@ -55,7 +55,7 @@ export function ConflictResolutionScreen({
 
             <button
               onClick={onDispute}
-              className="w-full text-left p-4 rounded-lg border border-[#2a2a3a] bg-[#1a1a26] hover:border-amber-500/40 hover:bg-amber-500/5 transition-colors"
+              className="w-full text-left p-4 rounded-lg border border-[#2a2a3a] bg-[#1a1a26] hover:border-[#717182] hover:bg-white/5 transition-colors"
             >
               <p className="text-[14px] font-medium text-[#e0e0e8] mb-1">Dispute the existing entry</p>
               <p className="text-[11px] text-[#717182]">
@@ -116,9 +116,9 @@ export function DisputeSubmittedScreen({
           subtitle="your definition is queued; you can verify the rest of your term while it is reviewed"
         >
           {/* Status badge */}
-          <div className="mb-5 p-3 bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/30 rounded-lg flex items-center gap-2">
-            <span className="text-amber-400 text-[14px]">⏳</span>
-            <p className="text-[12px] text-amber-300">Under expert review — usually resolved within 48 hours.</p>
+          <div className="mb-5 p-3 bg-[#13131c] border border-[#2a2a3a] rounded-lg flex items-center gap-2">
+            <span className="text-[#e0e0e8] text-[14px]">⏳</span>
+            <p className="text-[12px] text-[#a0a0b0]">Under expert review, usually resolved within 48 hours.</p>
           </div>
 
           {/* Dispute summary card */}
@@ -143,7 +143,7 @@ export function DisputeSubmittedScreen({
           {/* Primary action — the Verify path Miriam flagged as missing */}
           <button
             onClick={onVerify}
-            className="w-full py-3 bg-blue-500 hover:bg-blue-600 rounded-lg text-[13px] text-white font-medium mb-4"
+            className="w-full py-3 bg-[#e0e0e8] hover:bg-white rounded-lg text-[13px] text-[#0a0a14] font-medium mb-4"
           >
             Verify my term →
           </button>

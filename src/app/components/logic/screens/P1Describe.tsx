@@ -30,25 +30,18 @@ export function P1DescribeScreen({
   const wordCount = description.trim().split(/\s+/).filter(Boolean).length;
   const showCallout = description.length > 0 && wordCount < 20;
 
+  // These four inputs aren't wired to real voice/image/file/link processing
+  // yet — state the intent plainly rather than simulating a fake extraction
+  // with invented artifacts. Never write anything into the user's real
+  // description; that field should only ever contain what they actually typed.
   const demoContent = {
-    mic: "Voice recording demo: [Demo audio captured: 15 seconds. Transcription: 'I keep hitting this defect where the program does the wrong thing, and I never knew the precise term for it…']",
-    image: "Image demo: [Demo image uploaded: stack-trace.png. The system has identified visual features: a null-pointer exception raised during input parsing, an unhandled error path.]",
-    upload: "File demo: [Demo file uploaded: bug-report.pdf, 3 pages. The system has extracted key terms: defect, crash, regression, fault, incorrect behavior.]",
-    link: "Link demo: [Demo URL: en.wikipedia.org/wiki/Software_bug. The system has parsed the page summary.]",
-  };
-
-  const extractedText = {
-    mic: "I keep hitting a defect where the program produces the wrong result, and I never knew the precise term for it.",
-    image: "A stack trace showing a null-pointer dereference during input parsing: an incorrect, unintended program behavior.",
-    upload: "Notes on software defects, covering crashes, regressions, and faults that make a program behave incorrectly.",
-    link: "A software bug is an error, flaw, or fault in a computer program that causes it to produce an incorrect or unexpected result.",
+    mic: "Voice input: describe your concept out loud and the system transcribes it into the text field above. Not wired yet in this preview: type your description instead.",
+    image: "Image input: upload a photo or diagram of your concept and the system describes what it sees. Not wired yet in this preview: describe it in words instead.",
+    upload: "File input: attach a document and the system pulls the relevant concepts out of it. Not wired yet in this preview: paste the key details in instead.",
+    link: "Link input: paste a URL and the system reads and summarizes the page. Not wired yet in this preview: summarize it yourself instead.",
   };
 
   const handleModalClose = () => {
-    if (demoModal) {
-      const textToInsert = extractedText[demoModal as keyof typeof extractedText];
-      onDescriptionChange(description ? `${description}\n\n${textToInsert}` : textToInsert);
-    }
     setDemoModal(null);
   };
 
@@ -108,7 +101,7 @@ export function P1DescribeScreen({
               onChange={(e) => onDescriptionChange(e.target.value)}
               placeholder="Tell us about something you want to add to the knowledge base. You can upload an image, drop a link, or just type out a stream of consciousness."
               rows={7}
-              className="w-full bg-[#1a1a26] border border-[#2a2a3a] rounded-lg px-4 py-3 text-[13px] leading-relaxed outline-none resize-none focus:border-blue-500/40 placeholder:text-[#555]"
+              className="w-full bg-[#1a1a26] border border-[#2a2a3a] rounded-lg px-4 py-3 text-[13px] leading-relaxed outline-none resize-none focus:border-[#717182] placeholder:text-[#555]"
             />
             <div className="flex items-center gap-1 mt-2">
               <TooltipProvider>
@@ -186,8 +179,8 @@ export function P1DescribeScreen({
 
           {/* Word-count callout */}
           {showCallout && (
-            <div className="mb-4 p-4 rounded-lg border border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-amber-500/5">
-              <p className="text-[12px] font-medium mb-2 text-amber-400">Adding more detail helps:</p>
+            <div className="mb-4 p-4 rounded-lg border border-[#2a2a3a] bg-[#13131c]">
+              <p className="text-[12px] font-medium mb-2 text-[#e0e0e8]">Adding more detail helps:</p>
               <ul className="text-[11px] space-y-1 text-[#c0c0c8]">
                 <li>• How is this different from similar things?</li>
                 <li>• What is essential about it. What never changes?</li>
@@ -206,14 +199,14 @@ export function P1DescribeScreen({
               onChange={(e) => onScenarioChange(e.target.value)}
               placeholder="If something is a [your concept], then [what should be true]."
               rows={3}
-              className="w-full bg-[#1a1a26] border border-[#2a2a3a] rounded-lg px-4 py-3 text-[13px] leading-relaxed outline-none resize-none focus:border-blue-500/40 placeholder:text-[#555]"
+              className="w-full bg-[#1a1a26] border border-[#2a2a3a] rounded-lg px-4 py-3 text-[13px] leading-relaxed outline-none resize-none focus:border-[#717182] placeholder:text-[#555]"
             />
           </div>
 
           {/* Auto-title */}
-          <div className="p-3 rounded-lg border border-blue-500/30 bg-gradient-to-br from-blue-500/10 to-blue-500/5 flex items-center justify-between">
+          <div className="p-3 rounded-lg border border-[#2a2a3a] bg-[#13131c] flex items-center justify-between">
             <div>
-              <span className="text-[10px] uppercase tracking-wider text-blue-400">✨ auto-generated title: </span>
+              <span className="text-[10px] uppercase tracking-wider text-[#a0a0b0]">✨ auto-generated title: </span>
               <span className="font-mono font-medium text-[#e0e0e8]">{autoTitle}</span>
             </div>
             <button
@@ -240,7 +233,7 @@ export function P1DescribeScreen({
             </p>
             <button
               onClick={handleModalClose}
-              className="w-full py-2 bg-blue-500 hover:bg-blue-600 rounded-md text-[13px] text-white mb-3"
+              className="w-full py-2 bg-[#e0e0e8] hover:bg-white rounded-md text-[13px] text-[#0a0a14] mb-3"
             >
               Got it
             </button>
@@ -261,7 +254,7 @@ export function P1DescribeScreen({
             </p>
             <button
               onClick={() => setShowTitleHelp(false)}
-              className="w-full py-2 bg-blue-500 hover:bg-blue-600 rounded-md text-[13px] text-white mb-3"
+              className="w-full py-2 bg-[#e0e0e8] hover:bg-white rounded-md text-[13px] text-[#0a0a14] mb-3"
             >
               Got it
             </button>

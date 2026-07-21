@@ -95,7 +95,12 @@ export default function App() {
       case "splash":
         return (
           <SplashScreen
-            onStart={() => navigate("p1-describe")}
+            onStart={(initialDescription) => {
+              if (initialDescription && initialDescription.trim()) {
+                setP1Description(initialDescription);
+              }
+              navigate("p1-describe");
+            }}
             onAuthChange={(status) => setAuthStatus(status)}
             preAuth={false}
           />
@@ -132,7 +137,12 @@ export default function App() {
               navigateWithTransition("p3-classify", "Analyzing concept type…");
             }}
             onBack={() => navigate("p1-describe")}
-            candidates={["RelatedConcept1", "RelatedConcept2", "RelatedConcept3"]}
+            termName={autoTitle || "your concept"}
+            description={p1Description}
+            // Real, already-merged SUMO terms (github.com/ontologyportal/sumo
+            // PR #569, #563) — not fabricated placeholders, and deliberately
+            // upper-ontology/general rather than the niche Cyber.kif work.
+            candidates={["ArtificialIntelligenceAgent", "Sensing", "ShovelHead"]}
           />
         );
 
@@ -168,6 +178,8 @@ export default function App() {
             onNext={() => navigate("p6-statements")}
             onBack={() => navigate("p4-place")}
             onFieldsChange={setP5Fields}
+            description={p1Description}
+            scenario={p1Scenario}
           />
         );
 
@@ -178,6 +190,8 @@ export default function App() {
               navigateWithTransition("p7-verify", "Running validation gates…");
             }}
             onBack={() => navigate("p5-define")}
+            termName={autoTitle || "your concept"}
+            description={p1Description}
           />
         );
 

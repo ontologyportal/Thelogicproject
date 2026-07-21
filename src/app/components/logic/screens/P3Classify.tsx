@@ -86,13 +86,13 @@ export function P3ClassifyScreen({
                     isWaiting
                       ? "bg-[#1a1a26]/40 opacity-40 border-[#2a2a3a]"
                       : isCurrent
-                      ? "bg-gradient-to-br from-amber-500/10 to-amber-500/5 border-amber-500/30"
-                      : "bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border-emerald-500/30 opacity-60"
+                      ? "bg-[#13131c] border-[#3a3a4a]"
+                      : "bg-[#13131c]/60 border-[#2a2a3a] opacity-60"
                   }`}
                 >
                   {isDone ? (
-                    <p className="text-[12px] text-emerald-400">
-                      ✓ Answered: <strong>{answers[idx]}</strong>
+                    <p className="text-[12px] text-[#a0a0b0]">
+                      ✓ Answered: <strong className="text-[#e0e0e8]">{answers[idx]}</strong>
                     </p>
                   ) : isCurrent ? (
                     <>
@@ -105,7 +105,7 @@ export function P3ClassifyScreen({
                             onClick={() => handleAnswer("yes")}
                             className={`flex-1 py-2 rounded-md text-[12px] border transition-colors ${
                               selectedAnswer === "yes"
-                                ? "bg-blue-500 border-blue-500 text-white"
+                                ? "bg-[#e0e0e8] border-[#e0e0e8] text-[#0a0a14]"
                                 : "bg-[#1a1a26] border-[#2a2a3a] text-[#a0a0b0] hover:border-[#3a3a4a]"
                             }`}
                           >
@@ -115,7 +115,7 @@ export function P3ClassifyScreen({
                             onClick={() => handleAnswer("no")}
                             className={`flex-1 py-2 rounded-md text-[12px] border transition-colors ${
                               selectedAnswer === "no"
-                                ? "bg-blue-500 border-blue-500 text-white"
+                                ? "bg-[#e0e0e8] border-[#e0e0e8] text-[#0a0a14]"
                                 : "bg-[#1a1a26] border-[#2a2a3a] text-[#a0a0b0] hover:border-[#3a3a4a]"
                             }`}
                           >
@@ -128,7 +128,7 @@ export function P3ClassifyScreen({
                             onClick={() => handleAnswer(q.options[0])}
                             className={`flex-1 py-2 rounded-md text-[12px] border transition-colors ${
                               selectedAnswer === q.options[0]
-                                ? "bg-blue-500 border-blue-500 text-white"
+                                ? "bg-[#e0e0e8] border-[#e0e0e8] text-[#0a0a14]"
                                 : "bg-[#1a1a26] border-[#2a2a3a] text-[#a0a0b0] hover:border-[#3a3a4a]"
                             }`}
                           >
@@ -138,7 +138,7 @@ export function P3ClassifyScreen({
                             onClick={() => handleAnswer(q.options[1])}
                             className={`flex-1 py-2 rounded-md text-[12px] border transition-colors ${
                               selectedAnswer === q.options[1]
-                                ? "bg-blue-500 border-blue-500 text-white"
+                                ? "bg-[#e0e0e8] border-[#e0e0e8] text-[#0a0a14]"
                                 : "bg-[#1a1a26] border-[#2a2a3a] text-[#a0a0b0] hover:border-[#3a3a4a]"
                             }`}
                           >
@@ -162,7 +162,7 @@ export function P3ClassifyScreen({
                 <div
                   key={i}
                   className={`size-2 rounded-full ${
-                    i < answers.length ? "bg-blue-500" : "bg-[#2a2a3a]"
+                    i < answers.length ? "bg-[#e0e0e8]" : "bg-[#2a2a3a]"
                   } ${i === currentCard ? "animate-pulse" : ""}`}
                   style={{
                     animationDelay: i === currentCard ? `${i * 0.2}s` : undefined,
