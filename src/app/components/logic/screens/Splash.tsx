@@ -5,9 +5,12 @@ import { Mark } from "../shared";
 
 /**
  * HeroNodesGraphic — decorative monochrome network: scattered contributor
- * "nodes" with lines converging on a single central node. A cheap SVG
- * abstraction of many independent observers feeding one shared, provable
- * model of reality (in place of a full illustrated earth/beams scene).
+ * "nodes" around a globe, converging on the brand mark itself. The globe +
+ * scattered dots are the neural/perceptual half (many independent, uncertain
+ * observations of the world); the convergence terminating in the actual
+ * turnstile mark is the symbolic half (everything gets forced through the
+ * one part of the system that isn't fuzzy). One shape, not two separate
+ * ideas glued together — kept deliberately thin/faint, no illustration.
  */
 function HeroNodesGraphic() {
   const nodes = [
@@ -22,13 +25,19 @@ function HeroNodesGraphic() {
     { x: 255, y: 185, r: 3 },
     { x: 385, y: 255, r: 3 },
   ];
-  const center = { x: 300, y: 328, r: 10 };
+  const center = { x: 300, y: 328 };
+  const globe = { cx: 220, cy: 150, r: 128 };
   return (
     <svg
       viewBox="0 0 420 380"
       className="absolute right-0 top-0 h-full w-[48%] min-w-[380px] opacity-40 pointer-events-none"
       aria-hidden="true"
     >
+      {/* globe: outline + two latitude arcs, thin and faint */}
+      <circle cx={globe.cx} cy={globe.cy} r={globe.r} stroke="#e0e0e8" strokeWidth={0.6} strokeOpacity={0.14} fill="none" />
+      <ellipse cx={globe.cx} cy={globe.cy} rx={globe.r} ry={globe.r * 0.32} stroke="#e0e0e8" strokeWidth={0.5} strokeOpacity={0.1} fill="none" />
+      <ellipse cx={globe.cx} cy={globe.cy} rx={globe.r * 0.42} ry={globe.r} stroke="#e0e0e8" strokeWidth={0.5} strokeOpacity={0.1} fill="none" />
+
       {nodes.map((n, i) => (
         <line
           key={`l-${i}`}
@@ -44,8 +53,15 @@ function HeroNodesGraphic() {
       {nodes.map((n, i) => (
         <circle key={`c-${i}`} cx={n.x} cy={n.y} r={n.r} fill="#e0e0e8" fillOpacity={0.5} />
       ))}
-      <circle cx={center.x} cy={center.y} r={center.r + 7} fill="#e0e0e8" fillOpacity={0.06} />
-      <circle cx={center.x} cy={center.y} r={center.r} fill="#e0e0e8" fillOpacity={0.75} />
+
+      {/* convergence point: the brand mark itself, not a plain node */}
+      <circle cx={center.x} cy={center.y} r={24} fill="#e0e0e8" fillOpacity={0.05} />
+      <g transform={`translate(${center.x - 17}, ${center.y - 17}) scale(0.34)`}>
+        <circle cx="50" cy="30" r="7" fill="#e0e0e8" />
+        <circle cx="66" cy="66" r="7" fill="#e0e0e8" />
+        <line x1="28" y1="53" x2="28" y2="79" stroke="#e0e0e8" strokeWidth="6" strokeLinecap="round" />
+        <line x1="28" y1="66" x2="45" y2="66" stroke="#e0e0e8" strokeWidth="6" strokeLinecap="round" />
+      </g>
     </svg>
   );
 }
