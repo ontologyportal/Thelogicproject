@@ -59,9 +59,9 @@ function HeroNodesGraphic() {
 function HeroTypeToStart({ onSubmit }: { onSubmit: (text: string) => void }) {
   const [value, setValue] = useState("");
   const examples = [
-    "a hospital ship is protected from attack under international law…",
-    "photosynthesis converts light energy into chemical energy…",
-    "a contract requires consideration to be enforceable…",
+    "a hospital ship is protected from attack…",
+    "photosynthesis converts light into chemical energy…",
+    "a contract needs consideration to be enforceable…",
   ];
   const [exampleIdx, setExampleIdx] = useState(0);
 
@@ -83,8 +83,8 @@ function HeroTypeToStart({ onSubmit }: { onSubmit: (text: string) => void }) {
               onSubmit(value);
             }
           }}
-          placeholder={`Describe something the world should know: “${examples[exampleIdx]}”`}
-          className="flex-1 min-w-0 bg-transparent border-none outline-none text-[13.5px] text-[#e0e0e8] placeholder:text-[#555] placeholder:truncate"
+          placeholder={`“${examples[exampleIdx]}”`}
+          className="flex-1 min-w-0 overflow-hidden bg-transparent border-none outline-none text-[13.5px] text-[#e0e0e8] placeholder:text-[#555] placeholder:truncate"
         />
         <button
           onClick={() => onSubmit(value)}
@@ -176,8 +176,8 @@ export function SplashScreen({
               It's like contributing to Wikipedia,
               <span className="text-[#e0e0e8]"> except this one can prove others wrong.</span>
             </p>
-            <p className="text-[14px] text-[#a0a0b0] max-w-[600px] leading-relaxed mb-9">
-              Every claim you add becomes a formal, checkable statement. Phase 7 of this wizard runs Vampire, a real automated theorem prover, live in your browser, against everything the system already knows. Not a canned response: an actual proof, or a real contradiction surfaced.
+            <p className="text-[16px] text-[#a0a0b0] max-w-[600px] leading-snug mb-9">
+              Not a chatbot's guess. <span className="text-[#e0e0e8]">A machine-checked proof.</span>
             </p>
 
             <div className="mb-7">
