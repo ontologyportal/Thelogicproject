@@ -99,7 +99,14 @@ export interface Me {
 export async function getMe(): Promise<Me | null> {
   const res = await fetch("/api/auth/me", { credentials: "include" });
   if (!res.ok) return null;
-  return res.json();
+  try {
+    return await res.json();
+  } catch {
+    // No backend proxy in plain `vite` dev (only under `vercel dev` or prod) —
+    // the request falls through to Vite's static server instead of the
+    // serverless function, returning a non-JSON body. Treat as signed-out.
+    return null;
+  }
 }
 
 export function signOut(): Promise<void> {
@@ -133,6 +140,63 @@ export async function submitContribution(contribution: Contribution): Promise<Su
     throw new Error(body.error || `submit failed: ${res.status}`);
   }
   return res.json();
+}
+
+export interface DraftedFields {
+  parent: string;
+  everydayName: string;
+  docString: string;
+}
+
+/** Drafts Phase 5's fields from the Phase 1 description via GenAI-MIL (Gemini). */
+export async function draftFields(description: string, scenario?: string): Promise<DraftedFields> {
+  const res = await fetch("/api/draft", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ description, scenario }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || `draft request failed: ${res.status}`);
+  }
+  return res.json();
+}
+
+export interface Distinguisher {
+  candidate: string;
+  reason: string;
+}
+
+/** Drafts Phase 2's "how does this differ from X" reasoning via GenAI-MIL (Gemini). */
+export async function draftDistinguishers(
+  termName: string,
+  description: string,
+  candidates: string[]
+): Promise<Distinguisher[]> {
+  const res = await fetch("/api/distinguish", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ termName, description, candidates }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || `distinguish request failed: ${res.status}`);
+  }
+  return (await res.json()).distinguishers;
+}
+
+/** Drafts Phase 6's candidate statements via GenAI-MIL (Gemini). */
+export async function draftStatements(termName: string, description: string): Promise<string[]> {
+  const res = await fetch("/api/statements", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ termName, description }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || `statements request failed: ${res.status}`);
+  }
+  return (await res.json()).statements;
 }
 
 // Default demo term: SoftwareBug -> Defective. Self-contained so the proof is
