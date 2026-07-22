@@ -1,7 +1,13 @@
-// Submits a wizard-authored term: requires a signed-in GitHub session,
-// assembles the .kif/.tq/meta.json exactly from what the user's wizard
-// session validated, and opens a PR on the sumo-contributions staging repo.
-// The staging repo's own CI re-runs the same validation gates on the PR.
+// Submits a wizard-authored term: assembles the .kif/.tq/meta.json exactly
+// from what the user's wizard session validated, and opens a PR on the
+// sumo-contributions staging repo. The staging repo's own CI re-runs the
+// same validation gates on the PR.
+//
+// A signed-in GitHub session is not required — guests get a real PR too,
+// attributed to "guest" instead of a real username, matching the original
+// design intent ("both paths equally first-class") which was never
+// actually wired up before. Both paths use the same bot token; the only
+// difference is what name ends up in the commit/PR.
 const { parseCookies, verify } = require("./_lib/session");
 const { assembleKif, assembleTq, isValidIdentifier, isSingleBalancedForm } = require("./_lib/kif");
 const { openContributionPR } = require("./_lib/github");
@@ -17,10 +23,7 @@ module.exports = async (req, res) => {
 
   const cookies = parseCookies(req);
   const session = verify(cookies.session, process.env.SESSION_SECRET);
-  if (!session) {
-    res.writeHead(401, { "Content-Type": "application/json" });
-    return res.end(JSON.stringify({ error: "sign in with GitHub first" }));
-  }
+  const authorLogin = session?.login || "guest";
 
   let body = req.body;
   if (typeof body === "string") {
@@ -68,7 +71,7 @@ module.exports = async (req, res) => {
 
   const kif = assembleKif({ term, parent, everydayName, docString, formulas });
   const meta = JSON.stringify(
-    { term, parent, author_login: session.login, wizard_version: "1", ts: new Date().toISOString() },
+    { term, parent, author_login: authorLogin, wizard_version: "1", ts: new Date().toISOString() },
     null,
     2
   );
@@ -82,7 +85,7 @@ module.exports = async (req, res) => {
   }
 
   const prBody =
-    `Adds ${term} as a subclass of ${parent}, submitted through The Logic Project wizard by @${session.login}.\n\n` +
+    `Adds ${term} as a subclass of ${parent}, submitted through The Logic Project wizard by @${authorLogin}.\n\n` +
     `${docString}\n\n` +
     `Validated in the wizard: syntax check and a Vampire proof of the example scenario both passed before submission. ` +
     `CI re-runs the same checks on this pull request.\n\n` +
@@ -93,7 +96,7 @@ module.exports = async (req, res) => {
       term,
       files,
       prBody,
-      authorLogin: session.login,
+      authorLogin,
     });
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ prUrl, prNumber }));

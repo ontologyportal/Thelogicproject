@@ -10,7 +10,7 @@ import { FooterNavigation } from "../Navigation";
 import { useState, useEffect, useRef } from "react";
 import confetti from "canvas-confetti";
 import { motion } from "motion/react";
-import { Copy, Twitter, Link } from "lucide-react";
+import { Copy, Twitter, Link, Github } from "lucide-react";
 import {
   runGates,
   submitContribution,
@@ -984,18 +984,27 @@ export function SubmitScreen({
   termName = "[YourConcept]",
   proposedParent = "your category",
   contribution,
+  authStatus = "guest",
+  onSignIn,
 }: {
   onRestart: () => void;
   termName?: string;
   proposedParent?: string;
   contribution?: Contribution;
+  authStatus?: "authenticated" | "guest" | "none";
+  onSignIn?: () => void;
 }) {
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedMd, setCopiedMd] = useState(false);
   const copyTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const hasSubmittedRef = useRef(false);
 
-  const [status, setStatus] = useState<"submitting" | "success" | "error">(
-    contribution ? "submitting" : "success"
+  // Signed-in users submit immediately (they've already made their choice).
+  // Guests get a moment to choose "sign in to open a credited PR" before we
+  // submit on their behalf to the staging repo anonymously either way — both
+  // paths are real, neither is a dead end.
+  const [status, setStatus] = useState<"choice" | "submitting" | "success" | "error">(
+    !contribution ? "success" : authStatus === "authenticated" ? "submitting" : "choice"
   );
   const [prResult, setPrResult] = useState<SubmitResult | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -1012,11 +1021,13 @@ export function SubmitScreen({
   };
 
   const attemptSubmit = () => {
+    if (hasSubmittedRef.current) return;
     if (!contribution) {
       setStatus("success");
       fireConfetti();
       return;
     }
+    hasSubmittedRef.current = true;
     setStatus("submitting");
     setErrorMsg(null);
     submitContribution(contribution)
@@ -1026,13 +1037,14 @@ export function SubmitScreen({
         fireConfetti();
       })
       .catch((err) => {
+        hasSubmittedRef.current = false;
         setErrorMsg(String(err.message || err));
         setStatus("error");
       });
   };
 
   useEffect(() => {
-    attemptSubmit();
+    if (authStatus === "authenticated") attemptSubmit();
     return () => {
       copyTimersRef.current.forEach(clearTimeout);
     };
@@ -1059,6 +1071,39 @@ export function SubmitScreen({
     "Just contributed to The Logic Project, an open knowledge base anyone can use to reason about the world"
   );
   const statementCount = contribution?.formulas.length ?? 3;
+
+  if (status === "choice") {
+    return (
+      <div className="h-full flex flex-col bg-[#13131c] text-[#e0e0e8]">
+        <div className="flex-1 overflow-auto">
+          <Frame title="Ready to submit" subtitle="one thing before this goes out">
+            <div className="p-5 bg-[#1a1a26] border border-[#2a2a3a] rounded-lg mb-4">
+              <p className="text-[13px] text-[#c0c0c8] leading-relaxed mb-4">
+                Sign in with GitHub to open this as a real pull request under your name.
+                Skip it and we'll still open a real PR, just submitted anonymously to the
+                staging repo instead of credited to you.
+              </p>
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={onSignIn}
+                  className="flex items-center justify-center gap-2 py-2.5 bg-[#e0e0e8] hover:bg-white rounded-md text-[13px] text-[#0a0a14] font-medium"
+                >
+                  <Github className="size-3.5" /> Sign in to open a real PR
+                </button>
+                <button
+                  onClick={attemptSubmit}
+                  className="py-2.5 bg-transparent border border-[#2a2a3a] hover:border-[#3a3a4a] rounded-md text-[13px] text-[#a0a0b0] hover:text-white"
+                >
+                  Submit as guest
+                </button>
+              </div>
+            </div>
+          </Frame>
+          <AppFooter />
+        </div>
+      </div>
+    );
+  }
 
   if (status === "submitting") {
     return (
@@ -1137,16 +1182,26 @@ export function SubmitScreen({
 
             <p className="text-[11px] text-[#717182]">
               {prResult ? (
-                <a
-                  href={prResult.prUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[#e0e0e8] hover:text-white underline underline-offset-2"
-                >
-                  PR #{prResult.prNumber}
-                </a>
+                <>
+                  <a
+                    href={prResult.prUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#e0e0e8] hover:text-white underline underline-offset-2"
+                  >
+                    PR #{prResult.prNumber}
+                  </a>
+                  {authStatus !== "authenticated" && (
+                    <>
+                      {" "}· submitted anonymously.{" "}
+                      <button onClick={onSignIn} className="text-[#e0e0e8] hover:text-white underline underline-offset-2">
+                        Sign in to claim credit
+                      </button>
+                    </>
+                  )}
+                </>
               ) : (
-                "Sign in with GitHub to open a real pull request."
+                "Could not open a pull request."
               )}
             </p>
           </div>

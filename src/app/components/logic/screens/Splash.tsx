@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { Github, UserCircle2, Globe2, Eye, ShieldCheck, ChevronRight } from "lucide-react";
-import { getMe } from "../../../services/api";
+import { Globe2, Eye, ShieldCheck, ChevronRight } from "lucide-react";
 import { Mark } from "../shared";
 
 /**
@@ -14,16 +13,16 @@ import { Mark } from "../shared";
  */
 function HeroNodesGraphic() {
   const nodes = [
-    { x: 55, y: 35, r: 3 },
-    { x: 150, y: 12, r: 4 },
-    { x: 235, y: 50, r: 3 },
-    { x: 65, y: 128, r: 5 },
-    { x: 335, y: 65, r: 3 },
-    { x: 368, y: 165, r: 4 },
-    { x: 28, y: 205, r: 3 },
-    { x: 160, y: 235, r: 5 },
-    { x: 255, y: 185, r: 3 },
-    { x: 385, y: 255, r: 3 },
+    { x: 165, y: 25, r: 3 },
+    { x: 240, y: 10, r: 4 },
+    { x: 300, y: 45, r: 3 },
+    { x: 175, y: 110, r: 5 },
+    { x: 355, y: 60, r: 3 },
+    { x: 385, y: 160, r: 4 },
+    { x: 150, y: 195, r: 3 },
+    { x: 220, y: 230, r: 5 },
+    { x: 300, y: 180, r: 3 },
+    { x: 400, y: 250, r: 3 },
   ];
   const center = { x: 300, y: 328 };
   const globe = { cx: 220, cy: 150, r: 128 };
@@ -34,9 +33,9 @@ function HeroNodesGraphic() {
       aria-hidden="true"
     >
       {/* globe: outline + two latitude arcs, thin and faint */}
-      <circle cx={globe.cx} cy={globe.cy} r={globe.r} stroke="#e0e0e8" strokeWidth={0.6} strokeOpacity={0.14} fill="none" />
-      <ellipse cx={globe.cx} cy={globe.cy} rx={globe.r} ry={globe.r * 0.32} stroke="#e0e0e8" strokeWidth={0.5} strokeOpacity={0.1} fill="none" />
-      <ellipse cx={globe.cx} cy={globe.cy} rx={globe.r * 0.42} ry={globe.r} stroke="#e0e0e8" strokeWidth={0.5} strokeOpacity={0.1} fill="none" />
+      <circle cx={globe.cx} cy={globe.cy} r={globe.r} stroke="#e0e0e8" strokeWidth={0.6} strokeOpacity={0.22} fill="none" />
+      <ellipse cx={globe.cx} cy={globe.cy} rx={globe.r} ry={globe.r * 0.32} stroke="#e0e0e8" strokeWidth={0.5} strokeOpacity={0.16} fill="none" />
+      <ellipse cx={globe.cx} cy={globe.cy} rx={globe.r * 0.42} ry={globe.r} stroke="#e0e0e8" strokeWidth={0.5} strokeOpacity={0.16} fill="none" />
 
       {nodes.map((n, i) => (
         <line
@@ -122,48 +121,10 @@ function HeroTypeToStart({ onSubmit }: { onSubmit: (text: string) => void }) {
  */
 export function SplashScreen({
   onStart,
-  onAuthChange,
-  preAuth = false,
 }: {
   onStart: (initialDescription?: string) => void;
-  onAuthChange: (status: "authenticated" | "guest") => void;
-  preAuth?: boolean;
 }) {
-  const [authStatus, setAuthStatus] = useState<"authenticated" | "guest" | "none">(
-    preAuth ? "guest" : "none"
-  );
-  const [showGithubModal, setShowGithubModal] = useState(false);
-  const [githubLogin, setGithubLogin] = useState<string | null>(null);
-
-  // Picks up an existing session, e.g. right after the OAuth redirect back to "/".
-  useEffect(() => {
-    getMe().then((me) => {
-      if (me) {
-        setGithubLogin(me.login);
-        setAuthStatus("authenticated");
-        onAuthChange("authenticated");
-      }
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const handleGithubSignIn = () => {
-    setShowGithubModal(true);
-    window.location.href = "/api/auth/login";
-  };
-
-  const handleGuestContinue = () => {
-    setAuthStatus("guest");
-    onAuthChange("guest");
-    onStart();
-  };
-
   const handleCTAClick = (initialDescription?: string) => {
-    // If user hasn't made an explicit auth choice, default to guest mode
-    if (authStatus === "none") {
-      setAuthStatus("guest");
-      onAuthChange("guest");
-    }
     onStart(initialDescription);
   };
 
@@ -200,34 +161,7 @@ export function SplashScreen({
               <HeroTypeToStart onSubmit={handleCTAClick} />
             </div>
 
-            {/* Auth row */}
-            <div className="flex items-center gap-2 text-[11.5px]">
-              {authStatus === "authenticated" && githubLogin ? (
-                <span className="px-3 py-2 rounded-md bg-[#13131c] border border-[#2a2a3a] text-[#e0e0e8] flex items-center gap-2">
-                  <Github className="size-3.5" /> Signed in as @{githubLogin}
-                </span>
-              ) : (
-                <>
-                  <button
-                    onClick={handleGithubSignIn}
-                    disabled={authStatus !== "none"}
-                    className="px-3 py-2 rounded-md bg-[#13131c] border border-[#1f1f2c] hover:border-[#2a2a3a] text-[#c0c0c8] flex items-center gap-2 disabled:opacity-50"
-                  >
-                    <Github className="size-3.5" /> Sign in with GitHub
-                    <span className="text-[10px] text-[#717182]">claim credit</span>
-                  </button>
-                  <span className="text-[#555]">or</span>
-                  <button
-                    onClick={handleGuestContinue}
-                    disabled={authStatus !== "none"}
-                    className="px-3 py-2 rounded-md text-[#a0a0b0] hover:text-white hover:bg-white/5 flex items-center gap-2 disabled:opacity-50"
-                  >
-                    <UserCircle2 className="size-3.5" /> Continue as guest
-                  </button>
-                </>
-              )}
-            </div>
-            <div className="mt-12 flex items-center gap-8 text-[11px] text-[#717182]">
+            <div className="mt-2 flex items-center gap-8 text-[11px] text-[#717182]">
               <div className="flex items-center gap-2"><Globe2 className="size-3.5 text-[#a0a0b0]" /> Public & open-licensed</div>
               <div className="flex items-center gap-2"><Eye className="size-3.5 text-[#a0a0b0]" /> Every claim traceable to a source</div>
               <div className="flex items-center gap-2"><ShieldCheck className="size-3.5 text-[#a0a0b0]" /> Mechanically provable consistency</div>
@@ -271,20 +205,6 @@ export function SplashScreen({
           </p>
         </div>
       </div>
-
-      {/* GitHub auth modal */}
-      {showGithubModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-[#13131c] border border-[#1f1f2c] rounded-lg shadow-xl max-w-md w-full mx-4">
-            <div className="flex flex-col items-center gap-4 p-6">
-              <div className="animate-spin">
-                <Github className="size-12 text-[#a0a0b0]" />
-              </div>
-              <p className="text-lg text-[#e0e0e8] mb-2">Redirecting to GitHub…</p>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

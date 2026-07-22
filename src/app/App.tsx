@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { TopNavigation, PhaseTransition, StepNavigator } from "./components/logic/Navigation";
 import { type PhaseId } from "./components/logic/shared";
 import {
@@ -18,6 +18,7 @@ import {
   DisputeSubmittedScreen,
 } from "./components/logic/screens/ConflictResolution";
 import { getMe, DEMO_TERM, type Contribution } from "./services/api";
+import { saveResumeState, takeResumeState } from "./services/resume";
 
 /**
  * The Logic Project - Build A (Production App)
@@ -27,13 +28,27 @@ import { getMe, DEMO_TERM, type Contribution } from "./services/api";
 export default function App() {
   const [currentPhase, setCurrentPhase] = useState<PhaseId>("splash");
   const [completedPhases, setCompletedPhases] = useState<PhaseId[]>([]);
-  const [authStatus, setAuthStatus] = useState<"authenticated" | "guest" | "none">("none");
+  // No auth ceremony on entry — everyone starts as a guest immediately.
+  // Sign-in is offered later, scoped to the moment it actually matters
+  // (TopNav, always available; Submit, where it unlocks a real credited PR).
+  const [authStatus, setAuthStatus] = useState<"authenticated" | "guest" | "none">("guest");
   const [userName, setUserName] = useState<string | undefined>(undefined);
   const [autoTitle, setAutoTitle] = useState("");
   const [transition, setTransition] = useState<{ open: boolean; status: string }>({
     open: false,
     status: "",
   });
+
+  // Lifted phase state — persists when user navigates back
+  const [p1Description, setP1Description] = useState("");
+  const [p1Scenario, setP1Scenario] = useState("");
+  const [p5Fields, setP5Fields] = useState({ parent: "", everydayName: "", docString: "" });
+  const [p3Answers, setP3Answers] = useState<string[]>([]);
+  const [p4Answers, setP4Answers] = useState<string[]>([]);
+  const [p4Elaboration, setP4Elaboration] = useState("");
+  const proposedParent = p5Fields.parent || "your category";
+
+  const restoredRef = useRef(false);
 
   // Real GitHub identity, if the user has already signed in (e.g. returning
   // from the OAuth redirect, or a prior session cookie).
@@ -46,11 +61,43 @@ export default function App() {
     });
   }, []);
 
-  // Lifted phase state — persists when user navigates back
-  const [p1Description, setP1Description] = useState("");
-  const [p1Scenario, setP1Scenario] = useState("");
-  const [p5Fields, setP5Fields] = useState({ parent: "", everydayName: "", docString: "" });
-  const proposedParent = p5Fields.parent || "your category";
+  // Resume an in-progress draft across the OAuth round trip. Independent of
+  // the getMe() effect above — restoring the draft doesn't depend on the
+  // auth outcome; a canceled sign-in should still get the user's work back.
+  // Restoring currentPhase alone is enough: signing in from Submit resumes
+  // directly onto Submit (where the existing attemptSubmit effect fires
+  // once contribution is truthy); signing in from TopNav mid-flow resumes
+  // wherever the user actually was. No forced navigation needed either way.
+  useEffect(() => {
+    if (restoredRef.current) return;
+    restoredRef.current = true;
+    const saved = takeResumeState();
+    if (!saved) return;
+    setCurrentPhase(saved.currentPhase);
+    setP1Description(saved.p1Description);
+    setP1Scenario(saved.p1Scenario);
+    setP5Fields(saved.p5Fields);
+    setAutoTitle(saved.autoTitle);
+    setP3Answers(saved.p3Answers);
+    setP4Answers(saved.p4Answers);
+    setP4Elaboration(saved.p4Elaboration);
+    setCompletedPhases(saved.completedPhases);
+  }, []);
+
+  const signIn = () => {
+    saveResumeState({
+      currentPhase,
+      p1Description,
+      p1Scenario,
+      p5Fields,
+      autoTitle,
+      p3Answers,
+      p4Answers,
+      p4Elaboration,
+      completedPhases,
+    });
+    window.location.href = "/api/auth/login";
+  };
 
   // The rule-drafting LLM layer isn't wired yet, so the actual KIF formulas
   // submitted/validated fall back to the known-good demo term; the
@@ -66,9 +113,6 @@ export default function App() {
 
   // Conflict resolution sub-state
   const [disputeOpen, setDisputeOpen] = useState(false);
-  const [p3Answers, setP3Answers] = useState<string[]>([]);
-  const [p4Answers, setP4Answers] = useState<string[]>([]);
-  const [p4Elaboration, setP4Elaboration] = useState("");
 
   const navigateWithTransition = (phase: PhaseId, status: string) => {
     // Mark current phase as completed before transitioning
@@ -101,8 +145,6 @@ export default function App() {
               }
               navigate("p1-describe");
             }}
-            onAuthChange={(status) => setAuthStatus(status)}
-            preAuth={false}
           />
         );
 
@@ -227,17 +269,14 @@ export default function App() {
             onRestart={() => navigate("p1-describe")}
             termName={autoTitle || "[YourConcept]"}
             proposedParent={proposedParent}
-            contribution={authStatus === "authenticated" ? contribution : undefined}
+            contribution={contribution}
+            authStatus={authStatus}
+            onSignIn={signIn}
           />
         );
 
       default:
-        return (
-          <SplashScreen
-            onStart={() => navigate("p1-describe")}
-            onAuthChange={(status) => setAuthStatus(status)}
-          />
-        );
+        return <SplashScreen onStart={() => navigate("p1-describe")} />;
     }
   };
 
@@ -251,6 +290,7 @@ export default function App() {
             authStatus={authStatus}
             userName={authStatus === "authenticated" ? userName : undefined}
             termName={autoTitle || "[unnamed concept]"}
+            onSignIn={signIn}
           />
           <StepNavigator
             currentPhase={currentPhase}

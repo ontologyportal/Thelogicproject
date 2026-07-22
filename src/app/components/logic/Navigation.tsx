@@ -1,4 +1,4 @@
-import { UserCircle2, Github, ChevronRight, ChevronLeft } from "lucide-react";
+import { Github, ChevronRight, ChevronLeft } from "lucide-react";
 import { PHASES, type PhaseId, Mark } from "./shared";
 import { Button } from "../ui/button";
 
@@ -11,12 +11,14 @@ export function TopNavigation({
   authStatus = "guest",
   userName,
   termName = "[unnamed concept]",
+  onSignIn,
 }: {
   currentPhase: PhaseId;
   onPhaseClick?: (phase: PhaseId) => void;
   authStatus?: "authenticated" | "guest" | "none";
   userName?: string;
   termName?: string;
+  onSignIn?: () => void;
 }) {
   const isUnnamed = termName === "[unnamed concept]";
 
@@ -35,9 +37,15 @@ export function TopNavigation({
             <Github className="size-3.5" />
             <span>Signed in as @{userName}</span>
           </div>
-        ) : authStatus === "guest" ? (
-          <div className="text-[11px] text-[#a0a0b0]">Guest mode</div>
-        ) : null}
+        ) : (
+          <button
+            onClick={onSignIn}
+            className="flex items-center gap-1.5 text-[11px] text-[#717182] hover:text-[#c0c0c8] transition-colors"
+          >
+            <Github className="size-3.5" />
+            Sign in with GitHub
+          </button>
+        )}
       </div>
     </div>
   );
