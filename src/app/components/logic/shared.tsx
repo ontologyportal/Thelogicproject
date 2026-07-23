@@ -108,15 +108,15 @@ export function RefineBox({
 
   return (
     <div className="bg-[#1a1a26] border border-[#2a2a3a] focus-within:border-[#3a3a4a] rounded-xl p-3.5 transition-colors">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
         <Textarea
           value={value}
           onChange={(e) => onChange?.(e.target.value)}
           placeholder={placeholder}
           rows={rows}
-          className="flex-1 border-none bg-transparent resize-none focus-visible:ring-0 focus-visible:ring-offset-0 text-[13px] text-[#e0e0e8] placeholder:text-[#555]"
+          className="min-w-0 flex-1 border-none bg-transparent resize-none focus-visible:ring-0 focus-visible:ring-offset-0 text-[13px] text-[#e0e0e8] placeholder:text-[#555]"
         />
-        <div className="flex items-center gap-1 flex-shrink-0">
+        <div className="flex items-center gap-1 flex-shrink-0 justify-end sm:justify-start">
           <Button
             variant="ghost"
             size="icon"

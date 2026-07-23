@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Github, ChevronRight, ChevronLeft } from "lucide-react";
 import { PHASES, type PhaseId, Mark } from "./shared";
 import { Button } from "../ui/button";
@@ -23,27 +24,28 @@ export function TopNavigation({
   const isUnnamed = termName === "[unnamed concept]";
 
   return (
-    <div className="h-14 border-b border-[#1a1a26] bg-[#161622] flex items-center justify-between px-5 flex-shrink-0">
-      <div className="flex items-center gap-3">
+    <div className="h-14 border-b border-[#1a1a26] bg-[#161622] flex items-center justify-between gap-2 px-3 sm:px-5 flex-shrink-0 overflow-hidden">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         <Mark className="size-4 text-[#717182] flex-shrink-0" />
-        <span className="text-[11px] uppercase tracking-[0.1em] text-[#717182]">Your contribution</span>
-        <ChevronRight className="size-3 text-[#3a3a4a]" />
-        <span className={`text-[12.5px] ${isUnnamed ? "text-[#717182] italic" : "text-[#e0e0e8]"}`}>{termName}</span>
-        <span className="ml-1 text-[10px] px-2 py-0.5 rounded-full bg-[#13131c] text-[#a0a0b0] border border-[#2a2a3a] uppercase tracking-wider">Draft</span>
+        <span className="hidden sm:inline text-[11px] uppercase tracking-[0.1em] text-[#717182] flex-shrink-0">Your contribution</span>
+        <ChevronRight className="hidden sm:inline size-3 text-[#3a3a4a] flex-shrink-0" />
+        <span className={`text-[12.5px] truncate ${isUnnamed ? "text-[#717182] italic" : "text-[#e0e0e8]"}`}>{termName}</span>
+        <span className="hidden sm:inline ml-1 text-[10px] px-2 py-0.5 rounded-full bg-[#13131c] text-[#a0a0b0] border border-[#2a2a3a] uppercase tracking-wider flex-shrink-0">Draft</span>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-shrink-0">
         {authStatus === "authenticated" && userName ? (
           <div className="flex items-center gap-2 text-[11px] text-[#a0a0b0]">
-            <Github className="size-3.5" />
-            <span>Signed in as @{userName}</span>
+            <Github className="size-3.5 flex-shrink-0" />
+            <span className="hidden sm:inline">Signed in as @{userName}</span>
           </div>
         ) : (
           <button
             onClick={onSignIn}
-            className="flex items-center gap-1.5 text-[11px] text-[#717182] hover:text-[#c0c0c8] transition-colors"
+            className="flex items-center gap-1.5 text-[11px] text-[#717182] hover:text-[#c0c0c8] transition-colors whitespace-nowrap"
           >
-            <Github className="size-3.5" />
-            Sign in with GitHub
+            <Github className="size-3.5 flex-shrink-0" />
+            <span className="hidden sm:inline">Sign in with GitHub</span>
+            <span className="sm:hidden">Sign in</span>
           </button>
         )}
       </div>
@@ -148,6 +150,15 @@ export function StepNavigator({
   completedPhases?: PhaseId[];
   onPhaseClick?: (phase: PhaseId) => void;
 }) {
+  const activeRef = useRef<HTMLButtonElement | null>(null);
+
+  // On narrow screens this strip overflows and scrolls horizontally — make
+  // sure the current phase is actually the part that's visible instead of
+  // whatever happened to be scrolled into view on mount.
+  useEffect(() => {
+    activeRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+  }, [currentPhase]);
+
   return (
     <div className="relative w-full border-b border-[#1a1a26] bg-[#181826] overflow-x-auto">
       <div
@@ -163,6 +174,7 @@ export function StepNavigator({
           return (
             <button
               key={phase.id}
+              ref={isCurrent ? activeRef : undefined}
               onClick={() => onPhaseClick?.(phase.id)}
               className={`px-3.5 py-1.5 text-[10.5px] uppercase tracking-wider rounded-full transition-colors whitespace-nowrap ${
                 isCurrent

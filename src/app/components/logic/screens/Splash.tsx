@@ -170,10 +170,10 @@ export function SplashScreen({
         </div>
 
         {/* Body */}
-        <div className="max-w-[1100px] mx-auto px-10 py-12">
+        <div className="max-w-[1100px] mx-auto px-6 sm:px-10 py-12">
           <div className="mb-12">
             <div className="text-[11px] uppercase tracking-[0.18em] text-[#717182] mb-4">What you're contributing to</div>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[
                 { n: "25,000+", l: "Concepts already defined", s: "spanning every domain you can think of" },
                 { n: "180,000+", l: "Logical statements", s: "every one machine-checkable" },
