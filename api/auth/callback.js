@@ -44,13 +44,19 @@ module.exports = async (req, res) => {
     return res.end("GitHub sign-in failed. Please try again.");
   }
 
-  const userRes = await fetch("https://api.github.com/user", {
-    headers: {
-      Authorization: `Bearer ${tokenJson.access_token}`,
-      "User-Agent": "the-logic-project-wizard",
-    },
-  });
-  const user = await userRes.json();
+  let user;
+  try {
+    const userRes = await fetch("https://api.github.com/user", {
+      headers: {
+        Authorization: `Bearer ${tokenJson.access_token}`,
+        "User-Agent": "the-logic-project-wizard",
+      },
+    });
+    user = await userRes.json();
+  } catch (err) {
+    res.writeHead(502, { "Content-Type": "text/plain" });
+    return res.end("Could not reach GitHub to complete sign-in.");
+  }
   if (!user.login) {
     res.writeHead(400, { "Content-Type": "text/plain" });
     return res.end("Could not read your GitHub identity.");

@@ -68,6 +68,18 @@ module.exports = async (req, res) => {
     res.writeHead(400, { "Content-Type": "application/json" });
     return res.end(JSON.stringify({ error: "each formula must be a single, well-formed, balanced KIF expression" }));
   }
+  // scenario is optional, but if present its shape feeds straight into
+  // assembleTq() below — validate it here rather than let a malformed
+  // shape throw past this endpoint's own error handling.
+  if (scenario !== undefined && scenario !== null) {
+    const axiomsOk = scenario.axioms === undefined || Array.isArray(scenario.axioms);
+    const factsOk = scenario.facts === undefined || Array.isArray(scenario.facts);
+    const queryOk = scenario.query === undefined || typeof scenario.query === "string";
+    if (typeof scenario !== "object" || !axiomsOk || !factsOk || !queryOk) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      return res.end(JSON.stringify({ error: "scenario.axioms/facts must be arrays and scenario.query a string" }));
+    }
+  }
 
   const kif = assembleKif({ term, parent, everydayName, docString, formulas });
   const meta = JSON.stringify(

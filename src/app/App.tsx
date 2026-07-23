@@ -53,12 +53,17 @@ export default function App() {
   // Real GitHub identity, if the user has already signed in (e.g. returning
   // from the OAuth redirect, or a prior session cookie).
   useEffect(() => {
-    getMe().then((me) => {
-      if (me) {
-        setAuthStatus("authenticated");
-        setUserName(me.login);
-      }
-    });
+    getMe()
+      .then((me) => {
+        if (me) {
+          setAuthStatus("authenticated");
+          setUserName(me.login);
+        }
+      })
+      .catch(() => {
+        // Network hiccup checking for an existing session — already
+        // defaulted to guest, nothing more to do.
+      });
   }, []);
 
   // Resume an in-progress draft across the OAuth round trip. Independent of

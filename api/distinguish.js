@@ -55,7 +55,9 @@ module.exports = async (req, res) => {
     return res.end(JSON.stringify({ error: "could not reach the drafting service" }));
   }
 
-  if (!parsed || !Array.isArray(parsed.distinguishers)) {
+  const isWellFormed = parsed && Array.isArray(parsed.distinguishers) &&
+    parsed.distinguishers.every((d) => d && typeof d === "object");
+  if (!isWellFormed) {
     console.error("distinguish.js: unexpected result:", parsed);
     res.writeHead(502, { "Content-Type": "application/json" });
     return res.end(JSON.stringify({ error: "drafting service returned an unexpected response" }));

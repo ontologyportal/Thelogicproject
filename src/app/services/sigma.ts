@@ -14,7 +14,16 @@ let ready: Promise<Session> | null = null;
 function getSession(): Promise<Session> {
   if (ready) return ready;
   ready = (async () => {
-    await init({ module_or_path: wasmUrl });
+    try {
+      await init({ module_or_path: wasmUrl });
+    } catch (err) {
+      // Don't memoize a rejected promise — a transient blip (flaky network
+      // fetching the multi-MB wasm binary, an ad-blocker) would otherwise
+      // permanently break Phase 7 for the rest of the tab session, with the
+      // UI's own "Retry" button replaying the same cached failure forever.
+      ready = null;
+      throw err;
+    }
     const cfg = new Config();
     cfg.timeLimitSecs = 30;
     const session = new Session({ backend: Backend.Native, config: cfg });

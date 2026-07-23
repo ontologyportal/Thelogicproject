@@ -50,6 +50,10 @@ module.exports = async (req, res) => {
     res.writeHead(400, { "Content-Type": "application/json" });
     return res.end(JSON.stringify({ error: "description is required" }));
   }
+  if (scenario !== undefined && typeof scenario !== "string") {
+    res.writeHead(400, { "Content-Type": "application/json" });
+    return res.end(JSON.stringify({ error: "scenario must be a string" }));
+  }
   if (description.length > MAX_TEXT_LEN || (scenario && scenario.length > MAX_TEXT_LEN)) {
     res.writeHead(400, { "Content-Type": "application/json" });
     return res.end(JSON.stringify({ error: "input too long" }));

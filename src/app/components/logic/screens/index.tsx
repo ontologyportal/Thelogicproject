@@ -1052,19 +1052,26 @@ export function SubmitScreen({
   }, []);
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText("https://logicproject.org/contribute");
-    setCopiedLink(true);
-    const t = setTimeout(() => setCopiedLink(false), 1500);
-    copyTimersRef.current.push(t);
+    navigator.clipboard.writeText("https://logicproject.org/contribute").then(() => {
+      setCopiedLink(true);
+      const t = setTimeout(() => setCopiedLink(false), 1500);
+      copyTimersRef.current.push(t);
+    }).catch(() => {
+      // Clipboard access blocked (insecure origin, permissions policy) —
+      // silently skip the "Copied" confirmation rather than lie about it.
+    });
   };
 
   const handleCopyMd = () => {
     navigator.clipboard.writeText(
       `[I contributed to The Logic Project](https://logicproject.org/contribute)`
-    );
-    setCopiedMd(true);
-    const t = setTimeout(() => setCopiedMd(false), 1500);
-    copyTimersRef.current.push(t);
+    ).then(() => {
+      setCopiedMd(true);
+      const t = setTimeout(() => setCopiedMd(false), 1500);
+      copyTimersRef.current.push(t);
+    }).catch(() => {
+      // Clipboard access blocked — skip the confirmation, don't lie.
+    });
   };
 
   const tweetText = encodeURIComponent(

@@ -110,7 +110,9 @@ export async function getMe(): Promise<Me | null> {
 }
 
 export function signOut(): Promise<void> {
-  return fetch("/api/auth/logout", { method: "POST", credentials: "include" }).then(() => undefined);
+  return fetch("/api/auth/logout", { method: "POST", credentials: "include" })
+    .then(() => undefined)
+    .catch(() => undefined);
 }
 
 export interface Contribution {
