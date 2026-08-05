@@ -110,9 +110,14 @@ documentation-completeness rule (`conventions.md`) outright.
   that phase had already decided (the relevant `TermState` slice, e.g. the
   accepted `scope`, the claim table so far, tier statuses), and what the next
   Socratic question was going to be. The human should never have to
-  reconstruct where a term was left off from scrollback. This is a summary
-  of state already recorded in `TermState`, not new judgment, keep it factual
-  and short.
+  reconstruct where a term was left off from scrollback.
+  **This is a UI concern, not an LLM one.** The manager does not generate this
+  summary via a model call, it's a deterministic render of the `TermState`
+  object already held in state, a fixed component (a "resume card": phase
+  badge, decided-so-far fields, next question) driven directly off the struct.
+  Same determinism boundary as the rest of the app: SigmaKEE and stored state
+  are authoritative, the LLM only drives the Socratic dialogue itself, never
+  the bookkeeping display of what already happened.
 
 ## Telemetry orchestration
 
