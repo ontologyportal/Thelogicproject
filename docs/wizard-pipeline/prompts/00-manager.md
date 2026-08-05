@@ -104,6 +104,15 @@ documentation-completeness rule (`conventions.md`) outright.
   If the new top has a `blocked_on` matching the term that just passed, clear
   `blocked_on` and resume that term's suspended phase; otherwise the popped
   term was the outermost and the run is done.
+- **Resume briefing.** Before resuming a term popped back into (or any term
+  reopened after an interruption of any kind, not just an upstream-dependency
+  push), surface a short summary first: which phase it was suspended in, what
+  that phase had already decided (the relevant `TermState` slice, e.g. the
+  accepted `scope`, the claim table so far, tier statuses), and what the next
+  Socratic question was going to be. The human should never have to
+  reconstruct where a term was left off from scrollback. This is a summary
+  of state already recorded in `TermState`, not new judgment, keep it factual
+  and short.
 
 ## Telemetry orchestration
 
