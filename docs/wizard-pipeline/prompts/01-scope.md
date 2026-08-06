@@ -49,6 +49,14 @@ change its state and behavior regularly, or is it permanent?"
   and what inference the new term enables.
 
 ## Socratic questions (template — ask, do not assume)
+
+**One question per turn.** This is a wizard screen, not a questionnaire dump.
+Ask question 1, wait for the human's answer, then ask question 2, and so on —
+never present the whole list at once and never bundle a question with your
+own answer to it. If the human's answer to an earlier question already
+covers a later one, say so and skip it explicitly rather than re-asking, but
+still surface that you're skipping it — don't silently drop a screen.
+
 1. "Can you tell me more about who uses `<term>` in practice, and for what?"
 2. "How is `<term>` different from `<nearest adjacent terms>`?"
 3. "What's essential — what never changes when a `<term>` fact / instance
