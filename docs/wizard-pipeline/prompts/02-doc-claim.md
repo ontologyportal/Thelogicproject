@@ -64,13 +64,28 @@ type-checks and (b) the human approves it.
   class-level parts; `attribute` intrinsic properties.
 
 ## Socratic questions (template)
-- "Is claim N saying what you intend, in the real-world sense?"
-- "Is claim N genuinely non-formalizable flavor, or should we back it?"
-- "Did I miss a claim — is there an assertion in the doc string I didn't parse?"
-- For each `needs_axiom`: "Candidate axiom (type-check: PASS/FAIL). Does it
-  capture the claim without overcommitting?"
-- If the doc string looks LLM-generated or unsourced: "Where does this
-  documentation come from? Should we stub it for you to source?"
+
+**One claim adjudicated per turn**, same wizard-screen discipline as Scope
+(see `01-scope.md`). The parse itself is not a Socratic step — show the full
+parsed claim list up front as a table of contents (id + one-line claim only,
+no tags, no backing yet) so the human can immediately flag a missed or
+mis-split claim before any adjudication starts. Then walk the list one claim
+at a time: show that claim's proposed tag and reasoning, ask its question,
+wait for the answer, before presenting the next claim. Never present the
+full adjudicated table in one shot and ask for blanket approval — that's a
+document review, not a dialogue, and it's exactly the batching failure mode
+this file was already fixed for once (see `01-scope.md`'s equivalent fix).
+
+- Up front, once: "Here's how I parsed the doc string into claims: `<list>`.
+  Did I miss anything, or should any of these be split or merged?"
+- Per claim, in order:
+  - "Is claim N saying what you intend, in the real-world sense?"
+  - "Is claim N genuinely non-formalizable flavor, or should we back it?"
+  - For each `needs_axiom`: "Candidate axiom (type-check: PASS/FAIL). Does it
+    capture the claim without overcommitting?"
+- If the doc string looks LLM-generated or unsourced: ask this immediately,
+  before any per-claim adjudication — "Where does this documentation come
+  from? Should we stub it for you to source?"
 
 ## Output contract (to manager)
 `claims[]` fully tagged + adjudicated; counts `doc_claims`, `claims_backed`,
