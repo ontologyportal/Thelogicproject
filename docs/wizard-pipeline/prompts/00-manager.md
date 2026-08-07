@@ -80,6 +80,37 @@ scope/velocity tradeoff and not a mechanical one. A silent stub (an unbacked
 claim with no queued follow-up) is never acceptable; it breaks the
 documentation-completeness rule (`conventions.md`) outright.
 
+### Decomposition discovery
+
+A different shape of the same problem, downstream instead of upstream: the
+`doc_claim` phase parses a claim in the existing doc string (not a new
+requirement blocking the term) and finds that formalizing it well means
+introducing several new sibling terms, not one axiom. (Concrete case:
+`exploitCost`'s doc string said it "encompasses tooling acquisition, scaling
+effort, compute resources, expertise, and operational overhead" — formalizing
+that meant five new sub-cost predicates plus a summation rule, not a single
+`needs_axiom` line.)
+
+This is a real design tension for the app, not just a modeling detail: the
+wizard has to stay approachable for someone contributing one small fact at a
+time, while also surfacing genuine opportunities to embed richer, more novel
+structure when a claim actually calls for it. Collapsing either direction is
+a failure — always expanding makes every claim a multi-term ordeal and kills
+casual contribution; never expanding leaves real formalizable content
+permanently stubbed as `intentionally_unbacked` out of habit.
+
+Same rule as upstream-dependency discovery: **the manager does not decide
+this, and does not average it into some default depth.** Stop, name what a
+full decomposition would look like (how many new terms, what they'd hook
+into if existing SUMO machinery is available, roughly how much bigger the
+resulting PR gets), and offer the same shape of choice — go deep now (own
+PR, current term's remaining claims wait), do a partial decomposition (keep
+the components with genuine existing hooks, defer the thin ones), or leave
+the claim as `intentionally_unbacked` and revisit decomposition as its own
+future pass. Multiple-choice framing works well here (see `07-gate.md`'s
+model of presenting computed evidence for a human decision) — the human
+picks a listed option rather than answering an open question.
+
 ## Routing
 
 - **New-term mode:** scope → classify (`08-classify.md`) → doc_claim →
