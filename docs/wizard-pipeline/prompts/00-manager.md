@@ -111,6 +111,16 @@ future pass. Multiple-choice framing works well here (see `07-gate.md`'s
 model of presenting computed evidence for a human decision) — the human
 picks a listed option rather than answering an open question.
 
+**Every term that decomposition discovery spawns is a genuinely new term**,
+even though the pass it's spawned inside is running in enrichment mode for
+the original term. Route each one through `classify` (`08-classify.md`)
+before `doc_claim` finishes with it — the manager's enrichment-mode skip of
+`classify` applies to the term the human started the pass on, not to new
+siblings created along the way. This was missed on `exploitCost`'s first
+pass (five sub-cost terms landed without classify, caught only at the gate)
+— don't let the stack-depth of "we're already inside doc_claim" excuse
+skipping a phase a brand-new term actually needs.
+
 ## Routing
 
 - **New-term mode:** scope → classify (`08-classify.md`) → doc_claim →
