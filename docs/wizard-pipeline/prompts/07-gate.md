@@ -40,6 +40,19 @@ STEP 7 + the flowchart Phase-3 checklist + the quality gate.
   Theorem for ≥1 conjecture; KifFileChecker clean; termFormat present; WordNet
   mapping present (new term); feedback patterns A–E verified; every doc claim
   backed-or-categorized.
+- **New-term coverage check (mechanical, run before the checklist above is
+  even displayed):** diff the staged `Cyber.kif` edit against its base commit,
+  extract every `(instance <Term> ...)`/`(subclass <Term> ...)` declaration
+  introduced by this pass — including terms spawned mid-pass by decomposition
+  discovery, not just the term the human started on — and cross-reference each
+  against this pass's `step-classify` telemetry events. **Any new term with no
+  matching `step-classify` event blocks the checklist from rendering at all**
+  (not just a low WordNet-row score): route straight back to `classify` for
+  the missing term(s) before gate can present anything to the human. This is
+  a mechanical diff-and-cross-reference, not an LLM judgment call — the point
+  is that this check can't be silently skipped the way a prompt-level
+  reminder was on `exploitCost`'s five sub-cost terms (2026-08-08), because
+  it isn't asking anyone to remember, it's blocking the render.
 
 ## What you produce
 A keep / send-back decision **made by the human** on the computed evidence.
