@@ -43,19 +43,42 @@ engineering lessons" + the SoftwareBug methodology correction.
 1. Human approves the conjecture in SUO-KIF first (Socratic).
 2. Write the `.tq` (SUO-KIF native; never hand-write TPTP). Use `(time 120)`
    for headroom; ground type guards explicitly.
-3. Run:
-   - strict FOF: `bash tools/sigma-vv/sigma-prove.sh <term> <tag> <tq>`
-   - modal `Likely` (HOL): `bash tools/sigma-vv/sigma-prove.sh <term> <tag> --hol <tq>`
+3. Run `bash tools/sigma-vv/sigma-prove-auto.sh <term> <tag> <tq>`.
+   **The human/manager never picks Vampire vs. LEO-III.** This wrapper
+   deterministically greps the `.tq` for the modal-predicate list
+   (`tools/sigma-vv/modal-predicates.txt`: `holdsDuring`, `knows`,
+   `believes`, `desires`, `holdsObligation`, `says`, `confersNorm`,
+   `confersObligation`, `confersRight`, `deprivesNorm`,
+   `hasPurposeForAgent`, `modalAttribute`) and routes to the correct prover
+   automatically — Vampire/FOF when none match, LEO-III/HOL (`--hol`) when
+   any do. This isn't a rare edge case for this domain: attacker/defender
+   epistemic and intentional content (`knows`, `believes`, `desires`) and
+   dispositional claims (`modalAttribute Likely`) are core to modeling
+   cyberspace, not a corner case, so this routing runs by default on every
+   conjecture, not just ones a human flags as "modal." Fall back to
+   `sigma-prove.sh` directly with an explicit `--hol`/no-flag only if you
+   need to override the auto-routing for debugging.
 4. Read SZS status from `proof.json`. Theorem → success. Else read
    `failure_attribution` and return it to the manager for routing.
+
+## Known fragility on the HOL route (read before treating a HOL failure as content-wrong)
+
+The LEO-III/HOL path has real, separately-tracked toolchain issues (not
+Cyber.kif content defects): `--one`-mode THF translation omits the type
+header entirely (confirmed 2026-08-10, reproduces the sigmakee#536 bug
+class through a different entry point); a `--hol` run has also been
+observed to unexpectedly trigger TFF mode and crash Vampire itself (exit
+code 4, unhandled by `sigma-prove.sh`, same session). When a HOL-routed
+proof fails, check whether it's a genuine content issue or one of these
+known toolchain gaps before routing back to `doc_claim`/`patterns` — see
+`tools/TOOLCHAIN.md` for the full documented history.
 
 ## Socratic questions (template)
 - "Which consequence of `<term>` should we prove? I propose `<conjecture>`
   because it exercises `<piece of the scope>`. Approve, or pick another?"
-- "This conjecture is modal `Likely` — that runs the HOL route (LEO-III via
-  `--hol`). LEO-III is installed locally (`/home/devcontainers/leo` →
-  `~/Programs/LEO-III-STC/leo3-1.7.20-1.jar`, `-Xmx2g`). Prove the modal
-  consequence, or pick a strict one?"
+- If `sigma-prove-auto.sh` routed to HOL: no question needed, that's the
+  point of automatic routing — just report which predicates triggered it
+  if the human wants to know.
 
 ## Output contract (to manager)
 `{ tag, tq_path, szs, proof_json }`. On non-Theorem, include
