@@ -39,39 +39,73 @@ engineering lessons" + the SoftwareBug methodology correction.
   `sumo/development/proof-scenarios/<term>_<inference-tag>.tq`.
 - A deterministic proof artifact: raw transcript + `<term>_<tag>.proof.json`.
 
+## Hard constraint: non-triviality witnesses are proof scenarios, never Cyber.kif axioms
+
+Confirmed real risk (2026-08-27, `sigma-rs` Audit mode on Cyber.kif): 17
+bare, unconditional `(exists ...)` ground facts had accumulated in Cyber.kif
+over time, committed purely to demonstrate a relation isn't vacuous ("there
+exists a case where two agents diverge"). Several reused the same existential
+variable names (`?A1`/`?A2`/`?B1`/`?B2`) across unrelated axioms. A saturation
+audit flagged two of them as jointly contradictory with no real derivation
+shown — plausibly a Skolem-naming collision in the prover (unconfirmed
+without its source), but the underlying practice is wrong regardless of the
+exact mechanism: permanent, unscoped existential ground facts compound every
+future consistency/audit check's search space and interaction surface
+forever, for content that only ever needed to be checked once.
+
+If a phase (scope Q4, patterns E, or anywhere else) is tempted to demonstrate
+a term's machinery isn't vacuous by asserting a bare `(exists ...)` fact into
+Cyber.kif itself, stop — that content is a proof scenario, not a KB axiom.
+Write it as a `.tq` under `sumo/development/proof-scenarios/`, run it once,
+keep the transcript. Never let a bare top-level `(exists ...)` land in
+Cyber.kif as committed content.
+
 ## Deterministic check (mandatory — this IS the phase)
 1. Human approves the conjecture in SUO-KIF first (Socratic).
 2. Write the `.tq` (SUO-KIF native; never hand-write TPTP). Use `(time 120)`
    for headroom; ground type guards explicitly.
 3. Run `bash tools/sigma-vv/sigma-prove-auto.sh <term> <tag> <tq>`.
-   **The human/manager never picks Vampire vs. LEO-III.** This wrapper
+   **The human/manager never picks a prover by hand.** This wrapper
    deterministically greps the `.tq` for the modal-predicate list
    (`tools/sigma-vv/modal-predicates.txt`: `holdsDuring`, `knows`,
    `believes`, `desires`, `holdsObligation`, `says`, `confersNorm`,
    `confersObligation`, `confersRight`, `deprivesNorm`,
    `hasPurposeForAgent`, `modalAttribute`) and routes to the correct prover
-   automatically — Vampire/FOF when none match, LEO-III/HOL (`--hol`) when
-   any do. This isn't a rare edge case for this domain: attacker/defender
-   epistemic and intentional content (`knows`, `believes`, `desires`) and
-   dispositional claims (`modalAttribute Likely`) are core to modeling
-   cyberspace, not a corner case, so this routing runs by default on every
-   conjecture, not just ones a human flags as "modal." Fall back to
-   `sigma-prove.sh` directly with an explicit `--hol`/no-flag only if you
-   need to override the auto-routing for debugging.
+   automatically — Vampire/FOF when none match, **Vampire's native HOL/THF
+   route (`--hol-vampire`)** when any do. This isn't a rare edge case for
+   this domain: attacker/defender epistemic and intentional content
+   (`knows`, `believes`, `desires`) and dispositional claims
+   (`modalAttribute Likely`) are core to modeling cyberspace, not a corner
+   case, so this routing runs by default on every conjecture, not just ones
+   a human flags as "modal." LEO-III (`--hol`) is a manual fallback for
+   debugging only — it has documented, separately-tracked toolchain
+   breakage (`tools/TOOLCHAIN.md`), while Vampire's HOL route needed only
+   two small sigmakee fixes to work (landed during the `SecurityControl`
+   pass). Fall back to `sigma-prove.sh` directly with an explicit
+   `--hol`/`--hol-vampire`/no-flag only if you need to override the
+   auto-routing for debugging.
 4. Read SZS status from `proof.json`. Theorem → success. Else read
    `failure_attribution` and return it to the manager for routing.
 
 ## Known fragility on the HOL route (read before treating a HOL failure as content-wrong)
 
-The LEO-III/HOL path has real, separately-tracked toolchain issues (not
-Cyber.kif content defects): `--one`-mode THF translation omits the type
-header entirely (confirmed 2026-08-10, reproduces the sigmakee#536 bug
-class through a different entry point); a `--hol` run has also been
-observed to unexpectedly trigger TFF mode and crash Vampire itself (exit
-code 4, unhandled by `sigma-prove.sh`, same session). When a HOL-routed
-proof fails, check whether it's a genuine content issue or one of these
-known toolchain gaps before routing back to `doc_claim`/`patterns` — see
-`tools/TOOLCHAIN.md` for the full documented history.
+Both HOL routes have real, separately-tracked toolchain issues (not
+Cyber.kif content defects) — check `tools/TOOLCHAIN.md` for the full history
+before routing a HOL failure back to `doc_claim`/`patterns` as if it were a
+modeling error:
+
+- **`--hol-vampire` (default route):** the combined-KB THF file has a known
+  tail of undeclared-relation crashes (SIGSEGV) — two instances root-caused
+  and fixed during the `SecurityControl` pass (a stray numeric-constant
+  handling bug in `THFnew.writeTypes()`, and a genuinely undeclared
+  `loadBearingRegion` in `Objects.kif`), a third located but not yet
+  bisected. A crash here is worth a quick check against this known pattern
+  before assuming the term's content is wrong.
+- **`--hol` / LEO-III (manual fallback only):** `--one`-mode THF translation
+  omits the type header entirely (confirmed 2026-08-10, reproduces the
+  sigmakee#536 bug class through a different entry point); has also been
+  observed to unexpectedly trigger TFF mode and crash Vampire itself (exit
+  code 4, unhandled by `sigma-prove.sh`).
 
 ## Socratic questions (template)
 - "Which consequence of `<term>` should we prove? I propose `<conjecture>`
