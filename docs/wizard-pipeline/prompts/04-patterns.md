@@ -65,6 +65,23 @@ systematic error.
 - "Are R's variables typed tightly enough, or could they bind something
   unintended?"
 
+### Plain-language framing (mandatory for wizard UX, not just this file)
+
+The trained-ontologist framing above ("is R strict — real-world exception?")
+assumes a level of ontology-engineering literacy the wizard's actual
+contributor audience does not have. Confirmed directly (2026-08-19,
+`SecurityControl` C2): a trained ontology researcher can answer the
+technical framing directly, but flagged unprompted that the wizard's actual
+user group definitely cannot. Every phase's Socratic question needs
+a plain-language equivalent a casual contributor can actually answer,
+alongside (not instead of) the technical framing an expert reviewer sees.
+For Pattern C specifically: "Does `<consequent>` always happen once
+`<antecedent>` is true, or are there real situations where it doesn't?" —
+same content, no `strict`/`modal`/`antecedent`-as-jargon assumed. Apply the
+same translation pass to the other phases' Socratic templates
+(`01-scope.md` through `07-gate.md`) as a follow-up, not just here — this was
+caught on Pattern C but is a wizard-wide gap, not a Pattern-C-only one.
+
 ## Output contract (to manager)
 `patterns{ A..E: { status, note } }`; approved differentiation axioms staged.
 

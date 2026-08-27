@@ -47,10 +47,16 @@ Tags:
   human approval.
 
 ## Deterministic check (mandatory)
-For every `needs_axiom` row, before proposing the axiom:
-`bash tools/sigma-vv/sigma-typecheck.sh '<drafted-kif-axiom>'`. Show the human
-the PASS/FAIL alongside the draft. An axiom lands in Cyber.kif only after (a) it
-type-checks and (b) the human approves it.
+For every `needs_axiom` row that requires a *new* relation or class the term
+doesn't already have (not just reuse of an existing one), search the corpus
+for existing machinery that already covers it FIRST, before drafting —
+per `00-manager.md` Core Principle 5. Do this unprompted; do not wait for the
+human to ask. Only once the search comes up empty, draft the axiom, then
+before proposing it: `bash tools/sigma-vv/sigma-typecheck.sh
+'<drafted-kif-axiom>'`. Show the human the PASS/FAIL alongside the draft, and
+what the search turned up either way (found-and-reused, or searched-and-
+confirmed-new). An axiom lands in Cyber.kif only after (a) it type-checks and
+(b) the human approves it.
 
 ## Rule-strength selection (from STEP 6)
 - `=>` for absolute, provable, definitional commitments.

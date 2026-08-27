@@ -11,8 +11,8 @@ Validation (the deterministic backstop behind per-term proofs). Source:
 
 > "`Diagnostics.java` … runs in the web interface and on the command line. The
 > KifFileChecker does syntax + type checking only, **not Sigma diagnostics**.
-> Jon should run full diagnostics on Cyber.kif development terms before Pease
-> reviews for production elevation." — `pease-meeting-2026-05-20.md`, §5b.
+> [The ontologist] should run full diagnostics on Cyber.kif development terms
+> before Pease reviews for production elevation." — `pease-meeting-2026-05-20.md`, §5b.
 
 > Pease's step 5: "Debugging: run diagnostics, let the tool set find problems"
 > — and it precedes full-ontology theorem proving (step 6).
