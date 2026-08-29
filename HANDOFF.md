@@ -9,6 +9,12 @@ toolchain). Patent Pending.
 **First-time prod setup (OAuth App, bot token, Vercel env vars) is in
 [SETUP.md](./SETUP.md) — only Jon can do those steps.**
 
+**This repo is the middle tier of a proposed three-tier product** (bottom:
+sigmakee.dev as IDE; middle: this wizard; top: a proposed consumer QA
+tier, "AskSumo"), each tier its own service calling back to `sigma-rs` as
+the main service rather than a shared monolith. See
+[docs/architecture-tiers-2026-08-28.md](./docs/architecture-tiers-2026-08-28.md).
+
 ## Backend orientation (read this first — written for a new contributor or an AI agent)
 
 **One request, end to end:**
