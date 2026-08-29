@@ -71,5 +71,15 @@ return to (default doc_claim); the manager re-runs forward.
 - No edits beyond confirming/withholding the already-approved staged axioms.
 - Record the nexus on completion — completeness is relative to it.
 
+## Open questions (not yet resolved)
+- **Adoption threshold at scale (2026-08-28 meeting).** This phase's ratio/
+  checklist mechanism decides a single term's readiness. Raised but not
+  answered: at what granularity should adoption actually be judged once
+  contribution scales up — per rule, per concept, per file? The staging
+  mechanism this phase feeds into already exists (`jdev-02/sumo-contributions`
+  + its own CI, see `HANDOFF.md` §"Submit orientation") — this is only the
+  open question of what threshold that pipeline should apply as volume
+  grows, not a redesign of the mechanism itself.
+
 ## Telemetry
 `step-gate-decision term=<term> ratio=<x> checklist=<n/m> nexus="<proof/claim>" user_decision=<keep|send-back> send_back_phase=<…>`
