@@ -1,0 +1,92 @@
+name: LLM provider health check
+
+# Pings every configured provider in api/_lib/llm.js's fallback chain with a
+# trivial completion, to catch a deprecated model ID or an expired key as a
+# red CI run instead of a silent failover nobody notices until a demo. A
+# provider without a matching repo secret is skipped, not failed — same
+# graceful-degradation contract draftJSON() itself uses.
+#
+# GenAI-MIL is intentionally not checked here: it's IP-gated to a DoD
+# network policy no GitHub-hosted runner can reach (same reason it doesn't
+# work from the deployed Vercel app either). Verify it locally instead.
+
+on:
+  schedule:
+    - cron: "17 13 * * *" # daily, off the hour to avoid GitHub's cron rush
+  workflow_dispatch: {}
+
+jobs:
+  check-providers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Gemini
+        id: gemini
+        continue-on-error: true
+        run: .github/workflows/scripts/check-gemini.sh
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+      - name: Groq
+        id: groq
+        continue-on-error: true
+        run: .github/workflows/scripts/check-openai-compatible-provider.sh groq https://api.groq.com/openai/v1/chat/completions openai/gpt-oss-120b GROQ_API_KEY
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+
+      - name: NVIDIA NIM
+        id: nvidia
+        continue-on-error: true
+        run: .github/workflows/scripts/check-openai-compatible-provider.sh nvidia-nim https://integrate.api.nvidia.com/v1/chat/completions nvidia/llama-3.3-nemotron-super-49b-v1.5 NVIDIA_API_KEY
+        env:
+          NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+
+      - name: Cerebras
+        id: cerebras
+        continue-on-error: true
+        run: .github/workflows/scripts/check-openai-compatible-provider.sh cerebras https://api.cerebras.ai/v1/chat/completions gpt-oss-120b CEREBRAS_API_KEY
+        env:
+          CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
+
+      - name: Mistral
+        id: mistral
+        continue-on-error: true
+        run: .github/workflows/scripts/check-openai-compatible-provider.sh mistral https://api.mistral.ai/v1/chat/completions mistral-small-latest MISTRAL_API_KEY
+        env:
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+
+      - name: OpenRouter
+        id: openrouter
+        continue-on-error: true
+        run: .github/workflows/scripts/check-openai-compatible-provider.sh openrouter https://openrouter.ai/api/v1/chat/completions google/gemma-4-31b-it:free OPENROUTER_API_KEY
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## LLM provider health" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Provider | Result |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---|---|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Gemini | ${{ steps.gemini.outputs.result || 'failed' }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Groq | ${{ steps.groq.outputs.result || 'failed' }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| NVIDIA NIM | ${{ steps.nvidia.outputs.result || 'failed' }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Cerebras | ${{ steps.cerebras.outputs.result || 'failed' }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Mistral | ${{ steps.mistral.outputs.result || 'failed' }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| OpenRouter | ${{ steps.openrouter.outputs.result || 'failed' }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "GenAI-MIL is IP-gated and not checked from CI — verify locally." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Fail if any configured provider actually failed
+        if: |
+          steps.gemini.outputs.result == 'failed' ||
+          steps.groq.outputs.result == 'failed' ||
+          steps.nvidia.outputs.result == 'failed' ||
+          steps.cerebras.outputs.result == 'failed' ||
+          steps.mistral.outputs.result == 'failed' ||
+          steps.openrouter.outputs.result == 'failed'
+        run: |
+          echo "One or more configured providers failed their health check — see step logs above."
+          exit 1
