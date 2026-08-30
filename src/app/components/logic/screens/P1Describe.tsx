@@ -45,35 +45,79 @@ export function P1DescribeScreen({
     setDemoModal(null);
   };
 
-  // Extract meaningful noun phrases for CamelCase canonical name
+  // Extract a CamelCase canonical name from the sentence's opening noun
+  // phrase. Determiners/copulas/prepositions/relative pronouns end a
+  // leading noun phrase in English ("the flat structural part AT the end"),
+  // so they mark chunk boundaries rather than just getting filtered out —
+  // filtering them out entirely (the previous approach) collapsed separate
+  // phrases together, e.g. "relational attribute OF a computer program"
+  // became the single run "relational attribute computer". Coordinating
+  // conjunctions stay out of the boundary set since they join words within
+  // one phrase ("domed or concave protective surface" is one NP).
   const autoTitle = (() => {
     if (wordCount < 10) return "UnnamedConcept";
 
+    // If the user already typed a real PascalCase term name (the SUMO
+    // convention — "CyberExploit", not "cyber exploit"), that's the title:
+    // don't reconstruct one from lowercased fragments when they've already
+    // told us what they want it called. Requires a second internal capital
+    // so plain capitalized words ("Process") and acronyms ("SUMO") don't
+    // false-positive.
+    const explicitTerm = description.match(/\b[A-Z][a-z0-9]+(?:[A-Z][a-z0-9]*)+\b/)?.[0];
+    if (explicitTerm) return explicitTerm;
+
     const text = description.trim().toLowerCase();
 
-    // Common stop words to filter out
-    const stopWords = new Set([
+    const boundaryWords = new Set([
       "a", "an", "the", "this", "that", "these", "those", "is", "are", "was", "were",
       "be", "been", "being", "have", "has", "had", "do", "does", "did", "will", "would",
       "could", "should", "may", "might", "must", "can", "of", "to", "for", "with", "on",
       "at", "from", "by", "about", "as", "into", "through", "during", "before", "after",
-      "above", "below", "between", "under", "over", "it", "its", "in", "and", "or", "but",
-      "not", "so", "than", "too", "very", "just", "well", "kind", "thing", "i", "saw",
-      "found", "has", "have"
+      "above", "below", "between", "under", "over", "it", "its", "in", "which", "who",
+      "whose", "whom", "like", "such",
+      // Negated-modal contractions ("shouldn't" -> "shouldnt" after
+      // punctuation stripping) don't match their base form above and were
+      // slipping through as ordinary content words, e.g. "a hospital ship
+      // shouldnt be attacked" produced the chunk [hospital, ship, shouldnt]
+      // instead of stopping at "should".
+      "dont", "doesnt", "didnt", "isnt", "arent", "wasnt", "werent", "cant",
+      "cannot", "wont", "wouldnt", "couldnt", "shouldnt", "mustnt", "havent",
+      "hasnt", "hadnt", "neednt",
+    ]);
+    // "think"/"believe"/etc. are hedging preambles ("I think that X is..."),
+    // not the concept itself — without this they form their own throwaway
+    // first chunk and win over the real noun phrase that follows.
+    const skipWords = new Set([
+      "and", "or", "but", "nor", "not", "so", "than", "too", "very", "just", "well",
+      "kind", "thing", "i", "saw", "found", "think", "believe", "feel", "guess",
+      "suppose", "know", "understand", "mean", "consider", "reckon",
     ]);
 
-    // Extract important words (nouns, adjectives)
-    const words = text
-      .split(/\s+/)
-      .map(w => w.replace(/[^a-z]/g, ""))
-      .filter(w => w.length > 2 && !stopWords.has(w));
+    const tokens = text.split(/\s+/).map((w) => w.replace(/[^a-z]/g, "")).filter(Boolean);
 
-    if (words.length === 0) return "UnnamedConcept";
+    const chunks: string[][] = [];
+    let current: string[] = [];
+    for (const tok of tokens) {
+      if (boundaryWords.has(tok)) {
+        if (current.length) chunks.push(current);
+        current = [];
+        continue;
+      }
+      if (skipWords.has(tok)) continue;
+      if (tok.length > 2) current.push(tok);
+    }
+    if (current.length) chunks.push(current);
 
-    // Take up to 3 most important words and convert to CamelCase
-    const titleWords = words.slice(0, 3);
+    // The first non-empty chunk is the sentence's opening noun phrase — the
+    // concept being described. Within it, the head noun sits at the end
+    // ("protective surface part", not "domed concave protective"), so take
+    // the trailing words rather than the leading ones.
+    const firstChunk = chunks.find((c) => c.length > 0);
+    if (!firstChunk) return "UnnamedConcept";
+
+    const titleWords = firstChunk.slice(-3);
     return titleWords
-      .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
       .join("");
   })();
 

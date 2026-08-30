@@ -10,6 +10,7 @@ import {
   P4PlaceScreen,
   P5DefineScreen,
   P6StatementsScreen,
+  FormalizeScreen,
   P7VerifyScreen,
   SubmitScreen,
 } from "./components/logic/screens";
@@ -17,7 +18,7 @@ import {
   ConflictResolutionScreen,
   DisputeSubmittedScreen,
 } from "./components/logic/screens/ConflictResolution";
-import { getMe, DEMO_TERM, type Contribution } from "./services/api";
+import { getMe, DEMO_TERM, type Contribution, type Scenario } from "./services/api";
 import { saveResumeState, takeResumeState } from "./services/resume";
 
 /**
@@ -46,7 +47,24 @@ export default function App() {
   const [p3Answers, setP3Answers] = useState<string[]>([]);
   const [p4Answers, setP4Answers] = useState<string[]>([]);
   const [p4Elaboration, setP4Elaboration] = useState("");
+  const [p6Statements, setP6Statements] = useState<string[]>([]);
   const proposedParent = p5Fields.parent || "your category";
+
+  // The real formalize loop's output (src/app/services/formalize.ts) — null
+  // until the Socratic constraint loop has actually produced a real,
+  // checked rule. p7-verify renders FormalizeScreen instead of itself
+  // whenever this is null, so both the normal P6->P7 flow and a direct
+  // nav-pill jump to P7 trigger real formalization rather than ever
+  // falling back to DEMO_TERM's canned formula.
+  const [draftedFormulas, setDraftedFormulas] = useState<string[] | null>(null);
+  const [draftedScenario, setDraftedScenario] = useState<Scenario | null>(null);
+  const [draftedKif, setDraftedKif] = useState<string | null>(null);
+
+  const clearDraftedRules = () => {
+    setDraftedFormulas(null);
+    setDraftedScenario(null);
+    setDraftedKif(null);
+  };
 
   const restoredRef = useRef(false);
 
@@ -104,16 +122,26 @@ export default function App() {
     window.location.href = "/api/auth/login";
   };
 
-  // The rule-drafting LLM layer isn't wired yet, so the actual KIF formulas
-  // submitted/validated fall back to the known-good demo term; the
-  // structural fields (term/parent/name/doc) are the user's real input.
+  // formulas/scenario come from the real formalize loop now — DEMO_TERM is
+  // only a fallback for the term/parent NAME labels (harmless placeholder
+  // text before the user has typed anything), never for logical content.
+  // If draftedFormulas is somehow still null when this is read (e.g. the
+  // resume-across-OAuth gap noted below), formulas is an empty array —
+  // submit.js's own validation cleanly rejects that with a 400, which is a
+  // safe failure, not a silent substitution of canned content.
+  //
+  // Known gap: signing in from Submit after formalization saves/resumes
+  // phase state (services/resume.ts) but not draftedFormulas/Scenario
+  // themselves — lowest-priority item in the formalize-loop plan, cut for
+  // today. If hit, the user lands back on Submit with an empty formulas
+  // array and a clean submit failure rather than a wrong result.
   const contribution: Contribution = {
     term: autoTitle || DEMO_TERM.name,
     parent: p5Fields.parent || DEMO_TERM.parent,
     everydayName: p5Fields.everydayName || autoTitle || DEMO_TERM.name,
     docString: p5Fields.docString || DEMO_TERM.naturalLanguage,
-    formulas: DEMO_TERM.formulas,
-    scenario: DEMO_TERM.scenario,
+    formulas: draftedFormulas ?? [],
+    scenario: draftedScenario ?? undefined,
   };
 
   // Conflict resolution sub-state
@@ -233,8 +261,9 @@ export default function App() {
       case "p6-statements":
         return (
           <P6StatementsScreen
-            onNext={() => {
-              navigateWithTransition("p7-verify", "Running validation gates…");
+            onNext={(approvedStatements) => {
+              setP6Statements(approvedStatements);
+              navigate("p7-verify");
             }}
             onBack={() => navigate("p5-define")}
             termName={autoTitle || "your concept"}
@@ -243,13 +272,42 @@ export default function App() {
         );
 
       case "p7-verify":
+        // FormalizeScreen renders instead of P7 itself until real,
+        // checked formulas exist — covers both the normal P6->P7 flow and
+        // a direct nav-pill jump straight to P7.
+        if (!draftedFormulas || !draftedScenario) {
+          return (
+            <FormalizeScreen
+              term={autoTitle || "UnnamedConcept"}
+              parent={proposedParent === "your category" ? "Entity" : proposedParent}
+              description={p1Description}
+              scenario={p1Scenario}
+              statements={p6Statements}
+              onDone={({ formulas, scenario, kif }) => {
+                setDraftedFormulas(formulas);
+                setDraftedScenario(scenario);
+                setDraftedKif(kif);
+              }}
+              onEditStatements={() => {
+                clearDraftedRules();
+                navigate("p6-statements");
+              }}
+            />
+          );
+        }
         return (
           <P7VerifyScreen
             onNext={() => navigate("submit")}
-            onBack={() => navigate("p6-statements")}
+            onBack={() => {
+              clearDraftedRules();
+              navigate("p6-statements");
+            }}
             onSimulateConflict={() => navigate("conflict-resolution")}
-            formulas={contribution.formulas}
-            scenario={contribution.scenario}
+            formulas={draftedFormulas}
+            scenario={draftedScenario}
+            kifStatement={draftedKif ?? undefined}
+            naturalLanguageStatement={p1Description}
+            scenarioNL={p1Scenario}
           />
         );
 

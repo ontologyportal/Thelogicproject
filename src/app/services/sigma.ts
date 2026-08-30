@@ -37,6 +37,119 @@ function getSession(): Promise<Session> {
   return ready;
 }
 
+// Deterministic checking layers for the formalize loop
+// (src/app/services/formalize.ts). Per the constraint-architecture spec's
+// claim #4 cost decomposition — vocabulary (µs) / syntax (ms) / proof
+// (s–min) — vocabulary runs first since it's cheapest and catches the most
+// common LLM failure mode (an invented predicate) before spending a proof
+// attempt on it.
+
+const LOGICAL_OPERATORS = new Set(["and", "or", "not", "forall", "exists"]);
+
+/** Extracts KB-checkable symbols from a formula: not variables, not the
+ * =>/<=> operators (non-word, already excluded by the regex), not the
+ * and/or/not/forall/exists allowlist, and not quoted string contents. */
+export function extractSymbols(formula: string): string[] {
+  const noStrings = formula.replace(/"[^"]*"/g, " ");
+  const noVars = noStrings.replace(/[?@][A-Za-z_][A-Za-z0-9_]*/g, " ");
+  const words = noVars.match(/[A-Za-z_][A-Za-z0-9_]*/g) ?? [];
+  const seen = new Set<string>();
+  for (const w of words) {
+    if (!LOGICAL_OPERATORS.has(w.toLowerCase())) seen.add(w);
+  }
+  return [...seen];
+}
+
+/** Counts a relation's argument list in `(symbol a b c)`, respecting nested
+ * parens as single arguments. Returns null if the call form isn't found
+ * (e.g. the symbol only appears as a bare atom, not applied). */
+function countArgs(formula: string, symbol: string): number | null {
+  const callRe = new RegExp(`\\(${symbol}(?=[\\s)])`, "g");
+  const match = callRe.exec(formula);
+  if (!match) return null;
+  let i = match.index + match[0].length;
+  let depth = 0;
+  let args = 0;
+  let inToken = false;
+  for (; i < formula.length; i++) {
+    const c = formula[i];
+    if (c === "(") { depth++; if (depth === 1 && !inToken) { args++; inToken = true; } }
+    else if (c === ")") {
+      if (depth === 0) break;
+      depth--;
+      if (depth === 0) inToken = false;
+    } else if (/\s/.test(c)) {
+      if (depth === 0) inToken = false;
+    } else if (depth === 0 && !inToken) {
+      args++;
+      inToken = true;
+    }
+  }
+  return args;
+}
+
+export interface VocabFinding {
+  symbol: string;
+  kind: "undefined-term" | "arity-mismatch";
+  suggestions: string[];
+  detail: string;
+}
+
+/** Vocabulary layer: every non-variable, non-operator symbol in `formula`
+ * must either be one of `allowTerms` (the term being defined, its instance
+ * name — new by design, not yet in the KB) or resolve via `manpage()`
+ * against the already-ingested Merge.kif. Also flags an obvious arity
+ * mismatch when the symbol is a known relation applied with the wrong
+ * argument count. */
+export async function checkVocabulary(formula: string, allowTerms: string[]): Promise<VocabFinding[]> {
+  const session = await getSession();
+  const allow = new Set(allowTerms);
+  const findings: VocabFinding[] = [];
+  for (const symbol of extractSymbols(formula)) {
+    if (allow.has(symbol)) continue;
+    const man = session.manpage(symbol);
+    if (!man) {
+      const suggestions = session.search(symbol, { limit: 3 }).map((h) => h.symbol);
+      findings.push({
+        symbol,
+        kind: "undefined-term",
+        suggestions,
+        detail: `"${symbol}" is not a term in SUMO.`,
+      });
+      continue;
+    }
+    if (typeof man.arity === "number") {
+      const actual = countArgs(formula, symbol);
+      if (actual !== null && actual !== man.arity) {
+        findings.push({
+          symbol,
+          kind: "arity-mismatch",
+          suggestions: [],
+          detail: `"${symbol}" takes ${man.arity} argument${man.arity === 1 ? "" : "s"}, used with ${actual}.`,
+        });
+      }
+    }
+  }
+  return findings;
+}
+
+export interface SyntaxFinding {
+  code: string;
+  kind: string;
+  message: string;
+}
+
+/** Syntax layer: thin wrapper over validateFormula surfacing the
+ * structured diagnostic fields (code/kind), not just the joined message
+ * text runGatesLocal's own `check()` uses. */
+export async function checkSyntax(formula: string): Promise<SyntaxFinding[]> {
+  const session = await getSession();
+  return session
+    .validateFormula(formula)
+    .filter((d) => d.severity === "Error")
+    .map((d) => ({ code: d.code, kind: d.kind, message: d.message }));
+}
+
 export async function typecheckLocal(formula: string): Promise<{ valid: boolean; detail: string }> {
   const session = await getSession();
   const diags = session.validateFormula(formula);
