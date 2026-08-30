@@ -314,7 +314,7 @@ export function AppFooter({ isSplash = false }: { isSplash?: boolean }) {
           rel="noopener noreferrer"
           className={`text-neutral-500 hover:text-neutral-400 underline underline-offset-2 ${isSplash ? "italic" : ""}`}
         >
-          Open Knowledge Initiative
+          OntologyPortal
         </a>
       </p>
     </div>

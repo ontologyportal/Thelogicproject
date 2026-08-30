@@ -201,6 +201,41 @@ export async function draftStatements(termName: string, description: string): Pr
   return (await res.json()).statements;
 }
 
+export interface FailureHistoryEntry {
+  validator: string;
+  payload: string;
+  userAnswer?: string;
+}
+
+export interface DraftedRule {
+  formula: string;
+  instanceName: string;
+  fact: string;
+  query: string;
+  scenarioNote: string;
+}
+
+/** Drafts the real formula + test scenario for Phase 7 via GenAI-MIL (Gemini). */
+export async function draftRules(input: {
+  term: string;
+  parent: string;
+  description: string;
+  scenario?: string;
+  statements?: string[];
+  failureHistory?: FailureHistoryEntry[];
+}): Promise<DraftedRule> {
+  const res = await fetch("/api/rules", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || `rules request failed: ${res.status}`);
+  }
+  return res.json();
+}
+
 // Default demo term: SoftwareBug -> Defective. Self-contained so the proof is
 // real (real Vampire Theorem) and reliable, independent of deep KB selection.
 export const DEMO_TERM = {

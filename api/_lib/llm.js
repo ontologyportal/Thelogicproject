@@ -1,13 +1,17 @@
 // Shared JSON-drafting helper used by api/draft.js, api/distinguish.js,
-// api/statements.js.
+// api/statements.js, api/rules.js.
 //
-// Tries GenAI-MIL first (GENAI_MIL_API_KEY) — the DoD Gemini gateway, which
-// is what we want to demo when reachable. GenAI-MIL is IP-gated (IL5/CUI
-// network policy) and rejects requests from Vercel's serverless egress
-// ranges with a custom "Unauthorized Access" block page, so it works from a
-// local dev machine but not from the deployed app. When it's unreachable (or
-// not configured), this falls back to a direct public Gemini API call
-// (GEMINI_API_KEY, from Google AI Studio) so the hosted app keeps working.
+// Tries three providers in order, first configured-and-successful one wins:
+// GenAI-MIL (GENAI_MIL_API_KEY) -> public Gemini (GEMINI_API_KEY) -> Groq
+// (GROQ_API_KEY). Three independent providers/quotas so a single vendor
+// outage or rate limit (each has happened live) doesn't take the drafting
+// flow down during a demo.
+//
+// GenAI-MIL is the DoD Gemini gateway, which is what we want to demo when
+// reachable. It's IP-gated (IL5/CUI network policy) and rejects requests
+// from Vercel's serverless egress ranges with a custom "Unauthorized
+// Access" block page, so it works from a local dev machine but not from the
+// deployed app.
 //
 // GenAI-MIL also wraps the model in a "Gemini Enterprise" memory-assistant
 // persona that ignores the system role and tries to ask the user to save
@@ -15,9 +19,14 @@
 // user-role message reliably avoids that (verified against the live
 // endpoint). The direct Gemini API doesn't have this problem and supports
 // responseMimeType: "application/json" for reliable structured output.
+//
+// Groq is the last resort: a separate free-tier quota from Google's, so
+// Gemini rate-limiting doesn't take out Groq too.
 
 const GENAI_MIL_URL = "https://api.genai.mil/v1/chat/completions";
 const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
+const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+const GROQ_MODEL = "llama-3.3-70b-versatile";
 
 function extractJson(text) {
   try {
@@ -92,10 +101,36 @@ async function callGemini(prompt, { temperature, maxTokens }) {
   return parsed;
 }
 
+async function callGroq(prompt, { temperature, maxTokens }) {
+  const upstream = await fetch(GROQ_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      temperature,
+      max_tokens: Math.max(maxTokens, 500),
+      response_format: { type: "json_object" },
+      messages: [{ role: "user", content: prompt }],
+    }),
+  });
+  if (!upstream.ok) {
+    const errBody = await upstream.text().catch(() => "");
+    throw new Error(`groq ${upstream.status}: ${errBody.slice(0, 300)}`);
+  }
+  const completion = await upstream.json();
+  const content = completion?.choices?.[0]?.message?.content;
+  const parsed = content ? extractJson(content) : null;
+  if (!parsed) throw new Error("groq: unparseable completion");
+  return parsed;
+}
+
 /**
- * Drafts JSON from a prompt, trying GenAI-MIL then falling back to the
- * public Gemini API. Throws if neither is configured or both fail — callers
- * already handle that by falling back to static placeholders.
+ * Drafts JSON from a prompt, trying GenAI-MIL, then the public Gemini API,
+ * then Groq. Throws if none are configured or all fail — callers already
+ * handle that by falling back to static placeholders.
  */
 async function draftJSON(prompt, opts = {}) {
   const temperature = opts.temperature ?? 0.3;
@@ -116,8 +151,15 @@ async function draftJSON(prompt, opts = {}) {
       errors.push(String(err.message || err));
     }
   }
+  if (process.env.GROQ_API_KEY) {
+    try {
+      return await callGroq(prompt, { temperature, maxTokens });
+    } catch (err) {
+      errors.push(String(err.message || err));
+    }
+  }
   if (errors.length === 0) {
-    throw new Error("no LLM provider configured (set GENAI_MIL_API_KEY and/or GEMINI_API_KEY)");
+    throw new Error("no LLM provider configured (set GENAI_MIL_API_KEY, GEMINI_API_KEY, and/or GROQ_API_KEY)");
   }
   throw new Error(errors.join(" | "));
 }

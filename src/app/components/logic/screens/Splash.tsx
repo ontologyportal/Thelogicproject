@@ -73,10 +73,15 @@ function HeroNodesGraphic() {
  */
 function HeroTypeToStart({ onSubmit }: { onSubmit: (text: string) => void }) {
   const [value, setValue] = useState("");
+  // Deliberately unpolished, first-draft phrasing, not clean finished
+  // propositions — the placeholder is the first thing that teaches someone
+  // what's welcome here. Show them a tidy claim and they'll feel like they
+  // need one before they can start; show them a half-formed thought and
+  // they'll just start typing theirs.
   const examples = [
-    "a hospital ship is protected from attack…",
-    "photosynthesis converts light into chemical energy…",
-    "a contract needs consideration to be enforceable…",
+    "so like a hospital ship shouldn't be attackable right, it's medical…",
+    "i keep thinking photosynthesis is basically light turning into energy somehow…",
+    "isn't there some rule that a contract needs both sides giving something up…",
   ];
   const [exampleIdx, setExampleIdx] = useState(0);
 
@@ -110,7 +115,7 @@ function HeroTypeToStart({ onSubmit }: { onSubmit: (text: string) => void }) {
         </button>
       </div>
       <p className="text-[11px] text-[#717182] mt-2 pl-1">
-        Start typing, or press the arrow. You'll shape it together, step by step.
+        Don't worry about getting the wording right — type it however it comes out. We'll sharpen it together, step by step.
       </p>
     </div>
   );

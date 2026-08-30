@@ -22,7 +22,14 @@ import {
   type Scenario,
   type Contribution,
   type SubmitResult,
+  type FailureHistoryEntry,
 } from "../../../services/api";
+import {
+  runFormalizeLoop,
+  type FormalizeLayer,
+  type Escalation,
+  type DecisionTrailEntry,
+} from "../../../services/formalize";
 
 const PLACE_QUESTIONS = [
   "Can you buy or sell it?",
@@ -506,7 +513,7 @@ export function P6StatementsScreen({
   termName = "your concept",
   description = "",
 }: {
-  onNext: () => void;
+  onNext: (approvedStatements: string[]) => void;
   onBack?: () => void;
   termName?: string;
   description?: string;
@@ -673,7 +680,11 @@ export function P6StatementsScreen({
         <AppFooter />
       </div>
 
-      <FooterNavigation onBack={onBack} onNext={onNext} nextDisabled={!allApproved} />
+      <FooterNavigation
+        onBack={onBack}
+        onNext={() => onNext(statements.filter((s) => s.approved).map((s) => s.text))}
+        nextDisabled={!allApproved}
+      />
 
       {/* Toast notification */}
       {showToast && (
@@ -701,6 +712,208 @@ export function P6StatementsScreen({
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * Formalize: the Socratic constraint loop between the user's plain-language
+ * description and the ATP proof. Drafts a real rule (via GenAI-MIL/Gemini),
+ * runs it through deterministic vocabulary -> syntax -> proof checks
+ * against the in-browser SUMO session (src/app/services/formalize.ts),
+ * auto-retrying with a corrective signal on failure up to the connector
+ * contract's retry_policy budget, then escalating to a template-constrained
+ * question the user answers themselves rather than retrying forever.
+ * Never falls back to a canned formula — an unrecoverable failure is a
+ * plain error with Retry, not a silent substitution.
+ */
+export function FormalizeScreen({
+  term,
+  parent,
+  description,
+  scenario,
+  statements,
+  onDone,
+  onEditStatements,
+}: {
+  term: string;
+  parent: string;
+  description: string;
+  scenario?: string;
+  statements?: string[];
+  onDone: (result: { formulas: string[]; scenario: Scenario; kif: string }) => void;
+  onEditStatements: () => void;
+}) {
+  type GateState = "pending" | "checking" | "pass" | "fail";
+  const LAYERS: { id: FormalizeLayer; label: string; hint: string }[] = [
+    { id: "vocabulary", label: "Vocabulary check", hint: "every term checked against SUMO" },
+    { id: "syntax", label: "Syntax check", hint: "well-formed SUO-KIF" },
+    { id: "proof", label: "Proof attempt", hint: "real automated theorem prover" },
+  ];
+
+  const [gateStates, setGateStates] = useState<Record<FormalizeLayer, GateState>>({
+    draft: "checking",
+    vocabulary: "pending",
+    syntax: "pending",
+    proof: "pending",
+  });
+  const [retryMessage, setRetryMessage] = useState<string | null>(null);
+  const [escalation, setEscalation] = useState<Escalation | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [decisionTrail, setDecisionTrail] = useState<DecisionTrailEntry[]>([]);
+  const [showTrail, setShowTrail] = useState(false);
+  const [answerText, setAnswerText] = useState("");
+  const [answering, setAnswering] = useState(false);
+  const runIdRef = useRef(0);
+
+  const start = (seedHistory: FailureHistoryEntry[] = []) => {
+    const myRunId = ++runIdRef.current;
+    setGateStates({ draft: "checking", vocabulary: "pending", syntax: "pending", proof: "pending" });
+    setRetryMessage(null);
+    setEscalation(null);
+    setErrorMsg(null);
+    runFormalizeLoop(
+      { term, parent, description, scenario, statements },
+      (e) => {
+        if (runIdRef.current !== myRunId) return;
+        if (e.type === "layer-start" && e.layer) setGateStates((s) => ({ ...s, [e.layer!]: "checking" }));
+        if (e.type === "layer-pass" && e.layer) setGateStates((s) => ({ ...s, [e.layer!]: "pass" }));
+        if (e.type === "layer-fail" && e.layer) setGateStates((s) => ({ ...s, [e.layer!]: "fail" }));
+        if (e.type === "retry") {
+          setRetryMessage(`Attempt ${(e.attempt ?? 1) + 1} — retrying with a corrective signal.`);
+          setGateStates({ draft: "checking", vocabulary: "pending", syntax: "pending", proof: "pending" });
+        }
+      },
+      seedHistory
+    ).then((result) => {
+      if (runIdRef.current !== myRunId) return;
+      setDecisionTrail(result.decisionTrail);
+      if (result.status === "done") {
+        onDone({ formulas: result.formulas, scenario: result.scenario, kif: result.kif });
+      } else if (result.status === "escalated") {
+        setEscalation(result.escalation);
+      } else {
+        setErrorMsg(result.errorMessage);
+      }
+    });
+  };
+
+  useEffect(() => {
+    start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleAnswer = () => {
+    if (!escalation || !answerText.trim() || answering) return;
+    setAnswering(true);
+    start([{ validator: escalation.validator, payload: escalation.payload, userAnswer: answerText.trim() }]);
+    setAnswerText("");
+    setAnswering(false);
+  };
+
+  return (
+    <div className="h-full flex flex-col bg-[#13131c] text-[#e0e0e8]">
+      <div className="flex-1 overflow-auto">
+        <Frame
+          title="Formalizing your term"
+          subtitle="drafting real logic from what you described, then checking it"
+        >
+          {retryMessage && !escalation && !errorMsg && (
+            <div className="mb-4 text-[11px] text-[#717182]">{retryMessage}</div>
+          )}
+
+          <div className="space-y-2 mb-6">
+            {LAYERS.map((layer) => {
+              const state = gateStates[layer.id];
+              const tone =
+                state === "pass"
+                  ? "border-[#3a3a4a] bg-[#13131c]"
+                  : state === "fail"
+                  ? "border-2 border-[#e0e0e8] bg-[#13131c]"
+                  : "border-[#2a2a3a] bg-[#1a1a26]";
+              return (
+                <div key={layer.id} className={`p-3 rounded-lg border flex items-start gap-3 ${tone}`}>
+                  <div className="flex-shrink-0 text-[14px] leading-5 text-[#e0e0e8]">
+                    {state === "pass" ? "✓" : state === "fail" ? "✕" : state === "checking" ? (
+                      <span className="inline-block animate-spin">↻</span>
+                    ) : (
+                      "○"
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[12px] text-[#c0c0c8]">{layer.label}</p>
+                    <p className="text-[11px] text-[#717182] mt-0.5">{layer.hint}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {errorMsg && (
+            <div className="mb-6 p-3 rounded-lg border-2 border-[#e0e0e8] bg-[#13131c] text-[12px] text-[#e0e0e8]">
+              Could not draft a real rule ({errorMsg}).
+              <button
+                onClick={() => start()}
+                className="ml-2 px-2 py-0.5 text-[11px] bg-white/10 hover:bg-white/20 rounded text-[#e0e0e8]"
+              >
+                Retry
+              </button>
+            </div>
+          )}
+
+          {escalation && (
+            <div className="mb-6 p-4 bg-[#1a1a26] border border-[#2a2a3a] rounded-lg">
+              <div className="mb-2"><AISuggestionBadge variant="inference" /></div>
+              <p className="text-[13px] text-[#e0e0e8] mb-3 leading-relaxed">{escalation.question}</p>
+              <RefineBox
+                value={answerText}
+                onChange={setAnswerText}
+                placeholder="Type your answer…"
+                rows={2}
+              />
+              <div className="flex gap-2 mt-3">
+                <button
+                  onClick={handleAnswer}
+                  disabled={!answerText.trim() || answering}
+                  className="px-4 py-2 bg-[#e0e0e8] hover:bg-white rounded-md text-[12px] text-[#0a0a14] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Submit answer
+                </button>
+                {escalation.validator === "proof" && (
+                  <button
+                    onClick={onEditStatements}
+                    className="px-4 py-2 bg-transparent border border-[#2a2a3a] hover:border-[#3a3a4a] rounded-md text-[12px] text-[#a0a0b0]"
+                  >
+                    Edit statements instead
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {decisionTrail.length > 0 && (
+            <div className="mb-4">
+              <button
+                onClick={() => setShowTrail((v) => !v)}
+                className="text-[11px] text-[#717182] hover:text-[#a0a0b0]"
+              >
+                {showTrail ? "Hide" : "Show"} decision trail ({decisionTrail.length} steps)
+              </button>
+              {showTrail && (
+                <div className="mt-2 space-y-1.5">
+                  {decisionTrail.map((entry, i) => (
+                    <div key={i} className="text-[10.5px] text-[#717182] font-mono flex justify-between gap-3 border-b border-[#1f1f2c] pb-1.5">
+                      <span className="truncate">{entry.step}: {entry.decided}</span>
+                      <span className="flex-shrink-0">{entry.ms}ms</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </Frame>
+        <AppFooter />
+      </div>
     </div>
   );
 }
@@ -893,17 +1106,6 @@ export function P7VerifyScreen({
             </div>
           </div>
 
-          {/* Dev-only: simulate conflict flow without rigging gate failure */}
-          {devView && onSimulateConflict && (
-            <div className="mt-4 flex justify-end">
-              <button
-                onClick={onSimulateConflict}
-                className="text-[10px] text-[#555] hover:text-[#717182] transition-colors"
-              >
-                Simulate consistency conflict →
-              </button>
-            </div>
-          )}
         </Frame>
 
         <AppFooter />
@@ -1043,12 +1245,20 @@ export function SubmitScreen({
       });
   };
 
+  // authStatus starts as "guest" on every real mount (the OAuth redirect
+  // brings the page back before the async session check resolves), so this
+  // has to react to the prop changing, not just fire once at mount — a
+  // mount-only effect here means the screen never notices you actually
+  // signed in a beat later and stays frozen on the sign-in prompt.
   useEffect(() => {
     if (authStatus === "authenticated") attemptSubmit();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authStatus]);
+
+  useEffect(() => {
     return () => {
       copyTimersRef.current.forEach(clearTimeout);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleCopyLink = () => {
