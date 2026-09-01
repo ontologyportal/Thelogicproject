@@ -62,7 +62,7 @@ free-tier quotas backing a demo.
 
 | Env var | Where to get it |
 |---|---|
-| `GENAI_MIL_API_KEY` | DoD GenAI-MIL gateway (IL5/CUI network only) |
+| `GENAI_MIL_API_KEY` | DoD GenAI-MIL gateway (IL5/CUI network only). One key per account, not per model — the platform's ChatGPT Mil and Grok for Government are chat-UI-only, no API access as of 2026-09-01. The key self-locks roughly every 8 days; unlock it in the platform UI if requests start failing. |
 | `GEMINI_API_KEY` | aistudio.google.com → Get API key |
 | `GROQ_API_KEY` | console.groq.com → API Keys |
 | `NVIDIA_API_KEY` | build.nvidia.com → sign in with the NVIDIA Developer Program (free), pick a model, generate a key |

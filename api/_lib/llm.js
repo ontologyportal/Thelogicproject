@@ -13,6 +13,18 @@
 // Access" block page, so it works from a local dev machine but not from the
 // deployed app.
 //
+// The platform also offers ChatGPT Mil and Grok for Government, but as of
+// 2026-09-01 those are chat-interface-only — there's no API access to them
+// yet, only to Gemini, and only one API key exists per account rather than
+// one per model. There's nothing to add here until that changes; don't
+// re-attempt a multi-model GenAI-MIL cycle without checking the platform
+// again first.
+//
+// GENAI_MIL_API_KEY also self-locks for security roughly every 8 days and
+// has to be manually unlocked in the platform UI — an otherwise-unexplained
+// GenAI-MIL failure after it had been working is very likely this, not a
+// code regression. Check the platform before debugging the request itself.
+//
 // GenAI-MIL also wraps the model in a "Gemini Enterprise" memory-assistant
 // persona that ignores the system role and tries to ask the user to save
 // things to memory instead of following instructions — a single forceful
