@@ -39,10 +39,25 @@ One row per factual claim:
 |----|--------------------------------|-----|--------------------------|
 
 Tags:
-- `backed` — cite the existing axiom (file:line or kb_SUMO id) that entails it.
+- `backed` — cite the existing axiom (file:line or kb_SUMO id) that entails
+  it, and *verify the citation by actually searching the staged .kif content
+  for it* before tagging a claim `backed` — do not assert a citation from
+  memory or infer one from a nearby comment. A `;;`-prefixed comment
+  describing intended behavior is never backing, even when it reads like a
+  rule (2026-09-03, real incident: aggregateCyberCost's "equals the sum of
+  per-action costs" claim was tagged as backed by a comment plus a bare
+  non-triviality-witness existential, with no real `=>`/`<=>` rule behind
+  either — caught after merge, not before). Confirm the cited formula is a
+  real top-level `=>` or `<=>` form (starts with `(=>` or `(<=>` at column
+  0, not inside a `;;` comment) whose antecedent or consequent actually
+  references the claim's specific predicate/relation — not just any axiom
+  present somewhere in the term's block.
 - `intentionally_unbacked` — give the categorized `unbackable_reason`
   (Pease-allowed flavor; descriptive range-of-application; naming alias;
-  non-falsifiable possibility; HOL-not-expressible-in-current-FOF).
+  non-falsifiable possibility; HOL-not-expressible-in-current-FOF). A claim
+  phrased as a definite equality or computation ("X equals...", "X is the
+  sum of...") is not eligible for this category by default — those need a
+  real rule (see `backed`) or `needs_axiom`, not a flavor exemption.
 - `needs_axiom` — draft the SUO-KIF axiom, type-check it, flip to backed on
   human approval.
 
