@@ -56,6 +56,21 @@ SigmaKEE owns all verification deterministically.
    states its result and either auto-advances or asks for a lightweight
    acknowledgment — it should never read like an open question when there
    is nothing to adjudicate.
+7. **Match upstream comment placement, not just upstream axiom style.**
+   Merge.kif and Mid-level-ontology.kif's norm, once actually checked
+   against Cyber.kif (2026-09-03), is a `(documentation ...)` string
+   followed by an unbroken run of `=>`/`<=>` axioms — essentially no prose
+   between individual rules (one exception found across both files, ~55,000
+   lines combined). Cyber.kif had accumulated 5-10x the comment density even
+   adjusting for file size, mostly a `;; rule: ...` lead-in habit before
+   individual axioms. Any phase drafting a rule (`05-prove.md` especially)
+   should put rationale into the term's documentation string, not a floating
+   comment beside the axiom — a comment that only restates something the
+   doc string could just as easily say is a sign the content belongs there
+   instead. A comment is appropriate for genuine development provenance
+   (why something was extracted, what it replaced) but that belongs in
+   `sumo-todo.md`'s tracker and the `.tq`'s own `(note ...)`, not the
+   committed .kif file.
 
 ## Shared state — `TermState` stack
 

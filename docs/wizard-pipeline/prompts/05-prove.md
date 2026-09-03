@@ -60,6 +60,30 @@ Write it as a `.tq` under `sumo/development/proof-scenarios/`, run it once,
 keep the transcript. Never let a bare top-level `(exists ...)` land in
 Cyber.kif as committed content.
 
+**Before treating a bare existential as witness-only, check whether the doc
+claim it's standing in for is actually a possibility claim or a definite
+one.** Confirmed real miss (2026-09-03, the 17-item cleanup this constraint
+was written for): all 17 got moved to `.tq` witnesses uniformly, but one of
+them — `aggregateCyberCost`'s "equals the sum of per-action costs" claim —
+was a definite equality with no rule anywhere backing it, not a possibility
+claim. It needed a real `=>` rule (mirroring `exploitCost`'s own five-
+subcost summation rule, itself strengthened from witness to rule on
+2026-08-08 for the identical reason), not a witness. Caught after PR, not
+before. The distinguishing test: does the doc string say "may," "can," or
+"is not necessarily" (a possibility/non-constraint claim — witness-only is
+correct, `=>` cannot express an absence of constraint) or "not every ... has
+..." (an existential negation — witness-only is the *only* correct
+formalization, `=>` would assert something false)? Or does it say "equals,"
+"is the sum of," "is defined as" (a definite computation/equality claim —
+this needs a real rule; a bare existential or a comment describing it is
+never sufficient, see `02-doc-claim.md`'s `backed`-citation-verification
+requirement). Also check whether the claim is already backed by a *different*,
+more specific rule elsewhere in the term's neighborhood before writing a new
+one or defaulting to witness-only — two of the 17 (`exploitCost`'s and
+`patchCost`'s own agent-relative claims) turned out to already be covered by
+existing monotonicity/maturity-ordering rules a few lines away that just
+hadn't been cross-referenced.
+
 ## Deterministic check (mandatory — this IS the phase)
 1. Human approves the conjecture in SUO-KIF first (Socratic).
 2. Write the `.tq` (SUO-KIF native; never hand-write TPTP). Use `(time 120)`
