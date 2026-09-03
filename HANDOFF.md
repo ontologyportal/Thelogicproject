@@ -148,3 +148,45 @@ the per-request KB load.
   now hit Vampire 5.0.1 instruction limits during SInE selection over the large KB,
   and one flagged a possible KB inconsistency. The demo uses self-contained proofs,
   which are unaffected.
+
+## 2026-09-03 — Gate 5 (Completeness) needs a per-claim check, not a presence check
+
+`02-doc-claim.md` was hardened the same day (`Thelogicproject#10`, merged)
+to require a `backed` claim's citation be verified by actually searching
+the staged .kif content, not asserted — after a real incident where a term's
+"equals the sum of ..." doc claim got tagged `backed` against a comment
+plus a bare non-triviality-witness existential, with no real `=>`/`<=>`
+rule behind either (`ontologyportal/sumo` `cyber-existentials-cleanup`
+branch, commit `20165bbe` fixes the content; see `sumo-todo.md`'s
+2026-09-03 bookmark for the full story). That's the Socratic-side half of
+the fix. The mechanical gate needs the equivalent hardening and does not
+have it yet:
+
+**`server/index.js`'s `runGates()`, Gate 5 ("Completeness"):**
+```js
+const hasRule = formulas.some((f) => /\(=>|\(<=>/.test(f));
+```
+Passes if *any* axiom exists *anywhere* in the submitted formulas, with no
+connection to which specific claim it backs — it would not have caught the
+incident above. Needs to become a per-claim check: for each claim the
+doc-claim table marks `backed`, confirm its cited axiom is present among
+the submitted formulas as a real top-level `=>`/`<=>` (anchored `^\(`, not
+a `;;`-prefixed line) whose antecedent or consequent actually references
+the claim's predicate — not just that some axiom is present in the
+submission.
+
+**Check `src/app/services/sigma.ts` too, not just `server/index.js`.**
+This file's own "What's wired" table above says Phase 7 gates run
+**in-browser via WASM by default** now, with `server/index.js` described
+as "an older, optional path" (`VITE_LOCAL_SIGMA=0` only). Whoever picks
+this up should confirm whether `sigma.ts` has its own completeness-gate
+logic (possibly duplicating or superseding Gate 5) and apply the same
+per-claim fix there if so -- the default runtime most users actually hit
+may not even be `server/index.js` anymore. Grep for the gate id/label
+strings (`"completeness"`, `"Completeness check"`) across `src/` to find
+every place this logic lives before fixing just one of them.
+
+**`sumo-contributions`'s `validate.yml`** (the actual PR-gating CI, per
+this file's own Submit-orientation section below) needs the equivalent
+fix too. Not inspected or edited from the SUMO-ontology workspace session
+that found this, since that repo isn't cloned there.
