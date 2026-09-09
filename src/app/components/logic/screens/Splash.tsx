@@ -195,18 +195,23 @@ export function SplashScreen({
         </div>
 
         {/* Footer */}
-        <div className="w-full flex items-center justify-center gap-1.5 text-center pt-4 pb-4">
-          <Mark className="size-3 text-neutral-500" />
-          <p className="text-xs text-neutral-500">
-            Powered by{" "}
-            <a
-              href="https://ontologyportal.github.io/sigma-rs/browse/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-neutral-500 hover:text-neutral-400 underline underline-offset-2 italic"
-            >
-              SUMO
-            </a>
+        <div className="w-full flex flex-col items-center justify-center gap-1 text-center pt-4 pb-4">
+          <div className="flex items-center justify-center gap-1.5">
+            <Mark className="size-3 text-neutral-500" />
+            <p className="text-xs text-neutral-500">
+              Powered by{" "}
+              <a
+                href="https://ontologyportal.github.io/sigma-rs/browse/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-neutral-500 hover:text-neutral-400 underline underline-offset-2 italic"
+              >
+                SUMO
+              </a>
+            </p>
+          </div>
+          <p className="text-[10px] text-neutral-600">
+            Wizard architecture: Patent Pending.
           </p>
         </div>
       </div>
