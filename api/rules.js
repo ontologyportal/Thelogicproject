@@ -43,7 +43,7 @@ Description: ${description}${scenarioBlock}${statementsBlock}${historyBlock}
 
 Use ONLY simple, extremely common SUO-KIF predicates: "instance", "attribute", "subclass", or a single other common relation if strictly necessary. Do not invent predicates. The rule must be exactly this shape, one implication, using ?X as the variable:
 (=> (instance ?X ${term}) (attribute ?X SomePropertyClass))
-(SomePropertyClass should be an existing, extremely common, general SUMO class, e.g. Defective, Dangerous, Beneficial — pick whichever plain adjective-like class best matches the description. If none fit attribute-style, a single other very common binary relation is acceptable, but keep the same overall (=> (instance ?X ${term}) (...)) shape.)
+(SomePropertyClass must be an existing, extremely common, general SUMO class that is directly justified by specific wording in the description above — not merely plausible-sounding for the term's general domain. If the description does not clearly support any such class, pick the closest one it does support and say so in scenarioNote; never default to a generic adjective like Dangerous or Beneficial unless the description itself actually says the concept is dangerous or beneficial. If none fit attribute-style, a single other very common binary relation is acceptable, but keep the same overall (=> (instance ?X ${term}) (...)) shape.)
 
 Then give a test case: a made-up instance name for this rule (a single CamelCase identifier, e.g. ${term}Case1), the fact asserting that instance is a ${term}, and the query that follows from the rule with the instance substituted in.
 
