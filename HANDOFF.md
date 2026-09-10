@@ -93,7 +93,7 @@ crediting the real user in the commit message, PR title, and `meta.json`.
 | Backend `server/index.js` | Real. Zero-dependency Node HTTP server that shells the existing `tools/sigma-vv/*.sh` validators against SigmaKEE + Vampire. |
 | **GitHub sign-in** | **Real** OAuth (`api/auth/*.js`, Vercel serverless functions). Identity only — the wizard never requests repo access from the user. |
 | **Submit** | **Real.** Signed-in users get an actual PR opened on `sumo-contributions` (`api/submit.js`), whose own CI re-runs the same validators. Guests see the same success screen without a real PR (told to sign in). |
-| Rule-drafting (the actual KIF formulas) | **Not wired** — the LLM-drafting layer. Every submission currently validates/submits the same demo term's formulas (`SoftwareBug -> Defective`) regardless of what the user described; only the structural fields (term/parent/name/doc) are real per-session input. |
+| Rule-drafting (the actual KIF formulas) | **Real**, as of PR #7-9 (`api/draft.js`, `api/rules.js`). Deliberately scoped to one docString sentence and one formula per term — not a stub, but a reliability tradeoff for the in-browser WASM prover, which only holds bare `Merge.kif` resident (see `src/app/services/sigma.ts`), not `Cyber.kif` or any other domain extension. Verified live 2026-09-10 running the wizard on `CyberExploit`. |
 
 ## Run it locally
 
@@ -185,6 +185,31 @@ per-claim fix there if so -- the default runtime most users actually hit
 may not even be `server/index.js` anymore. Grep for the gate id/label
 strings (`"completeness"`, `"Completeness check"`) across `src/` to find
 every place this logic lives before fixing just one of them.
+
+**Resolved 2026-09-10, partially.** Not two copies of this check but
+**three**: `server/index.js`'s own `runGates()` (the legacy
+`USE_SIGMA_VV=true` shell-out path), `server/sigma.js`'s `gates()` (the
+actual default -- `USE_SIGMA_VV` is false unless set, so this is the code
+path a real request hits), and `src/app/services/sigma.ts`'s
+`runGatesLocal()` (the in-browser WASM path). All three carried the
+identical unpatched substring check. A subagent running the wizard live on
+`CyberExploit` reproduced the exact loophole this section predicted: a
+crafted payload pairing a bare top-level `(exists ...)` with an unrelated
+`(=> ...)` passed both Gate 2 (Reference) and Gate 5 (Completeness) --
+confirmed directly against the live default (`server/sigma.js`) via curl,
+not just read from source. Fixed in all three files: `hasTopLevelForm()`
+now checks each formula's own top-level operator (anchored
+`^\(\s*(=>|<=>)(?=[\s)])`) instead of substring-matching anywhere across
+the array, so a nested `=>` inside a different top-level form no longer
+counts. Re-verified against the live server after the fix: the same
+adversarial payload now correctly fails both gates, a legitimate
+single-formula payload still passes. This closes the loophole reported
+live, but is **not** the fuller per-claim/predicate-matching check this section
+originally asked for — the shipped app has no doc-claim table to check
+against (it drafts one docString sentence and one formula per term, see
+the updated wiring-table row above), so "per-claim" doesn't yet map onto
+anything in the current architecture. That fuller check is still open if
+the app ever grows a real claims list.
 
 **`sumo-contributions`'s `validate.yml`** (the actual PR-gating CI, per
 this file's own Submit-orientation section below) needs the equivalent

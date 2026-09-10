@@ -160,6 +160,21 @@ export async function typecheckLocal(formula: string): Promise<{ valid: boolean;
   };
 }
 
+// Checks each formula's OWN top-level operator, not whether one of these
+// tokens appears anywhere in the formula (including nested inside a
+// different top-level form). A bare top-level (exists ...) formula sitting
+// next to an unrelated (=> ...) formula must not satisfy a check for "=>" --
+// found live 2026-09-10 running the wizard on CyberExploit: the old
+// substring test let exactly that combination pass the reference and
+// completeness gates, the same bare-top-level-exists-as-committed-content
+// bug fixed in sumo#589. Lookahead on whitespace/paren, not \b -- \b is a
+// word/non-word transition and never matches after a symbol operator like
+// "=>" followed by a space.
+function hasTopLevelForm(formulas: string[], operators: string[]): boolean {
+  const re = new RegExp(`^\\(\\s*(${operators.join("|")})(?=[\\s)])`);
+  return formulas.some((f) => re.test(String(f).trim()));
+}
+
 export async function runGatesLocal({ formulas = [], scenario }: GatesRequest): Promise<GatesResponse> {
   const session = await getSession();
 
@@ -178,7 +193,7 @@ export async function runGatesLocal({ formulas = [], scenario }: GatesRequest): 
     detail: syntaxOk ? "All statements are well-formed SUO-KIF." : syntax.find((s) => !s.valid)!.detail,
   });
 
-  const hasRef = formulas.some((f) => /\(instance|\(subclass|\(=>|\(<=>/.test(f));
+  const hasRef = hasTopLevelForm(formulas, ["instance", "subclass", "=>", "<=>"]);
   gates.push({
     id: "reference",
     label: "Reference check",
@@ -223,7 +238,7 @@ export async function runGatesLocal({ formulas = [], scenario }: GatesRequest): 
         : NOT_VERIFIED,
   });
 
-  const hasRule = formulas.some((f) => /\(=>|\(<=>/.test(f));
+  const hasRule = hasTopLevelForm(formulas, ["=>", "<=>"]);
   gates.push({
     id: "completeness",
     label: "Completeness check",

@@ -118,6 +118,21 @@ function prove(scenario, term = "wizard", tag = "gate") {
 // Returns the wizard's five gates. Syntax, Consistency, and Scenario are REAL
 // (typecheck + Vampire). Reference and Completeness are lightweight real checks.
 
+// Checks each formula's OWN top-level operator, not whether one of these
+// tokens appears anywhere in the formula (including nested inside a
+// different top-level form). A bare top-level (exists ...) formula sitting
+// next to an unrelated (=> ...) formula must not satisfy a check for "=>" —
+// found live 2026-09-10 running the wizard on CyberExploit: the old
+// substring test let exactly that combination pass Gates 2 and 5, the same
+// bare-top-level-exists-as-committed-content bug fixed in sumo#589.
+function hasTopLevelForm(formulas, operators) {
+  // Lookahead on whitespace/paren, not \b -- \b is a word/non-word
+  // transition and never matches after a symbol operator like "=>" or
+  // "<=>" followed by a space, so it would silently never match those.
+  const re = new RegExp(`^\\(\\s*(${operators.join("|")})(?=[\\s)])`);
+  return formulas.some((f) => re.test(String(f).trim()));
+}
+
 function runGates({ formulas = [], scenario }) {
   const gates = [];
 
@@ -132,7 +147,7 @@ function runGates({ formulas = [], scenario }) {
   });
 
   // Gate 2 — Reference (lightweight: a rule references at least one class/relation)
-  const hasRef = formulas.some((f) => /\(instance|\(subclass|\(=>|\(<=>/.test(f));
+  const hasRef = hasTopLevelForm(formulas, ["instance", "subclass", "=>", "<=>"]);
   gates.push({
     id: "reference",
     label: "Reference check",
@@ -159,7 +174,7 @@ function runGates({ formulas = [], scenario }) {
   });
 
   // Gate 5 — Completeness (real: at least one behavioral rule present)
-  const hasRule = formulas.some((f) => /\(=>|\(<=>/.test(f));
+  const hasRule = hasTopLevelForm(formulas, ["=>", "<=>"]);
   gates.push({
     id: "completeness",
     label: "Completeness check",

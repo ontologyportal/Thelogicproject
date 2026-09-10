@@ -62,6 +62,22 @@ async function prove(scenario) {
   return { proved, szs, wallMs, detail: proved ? `sigma-rs: ${szs}.` : `sigma-rs: ${r.status} (no proof).` };
 }
 
+// Checks each formula's OWN top-level operator, not whether one of these
+// tokens appears anywhere in the formula (including nested inside a
+// different top-level form). A bare top-level (exists ...) formula sitting
+// next to an unrelated (=> ...) formula must not satisfy a check for "=>" --
+// found live 2026-09-10 running the wizard on CyberExploit against this
+// exact code path (server/index.js's default USE_SIGMA_VV=false engine):
+// the old substring test let exactly that combination pass the reference
+// and completeness gates, the same bare-top-level-exists-as-committed-
+// content bug fixed in sumo#589. Lookahead on whitespace/paren, not \b --
+// \b is a word/non-word transition and never matches after a symbol
+// operator like "=>" followed by a space.
+function hasTopLevelForm(formulas, operators) {
+  const re = new RegExp(`^\\(\\s*(${operators.join("|")})(?=[\\s)])`);
+  return formulas.some((f) => re.test(String(f).trim()));
+}
+
 async function gates({ formulas = [], scenario }) {
   const gates = [];
 
@@ -74,7 +90,7 @@ async function gates({ formulas = [], scenario }) {
     detail: syntaxOk ? "All statements are well-formed SUO-KIF." : syntax.find((s) => !s.valid).detail,
   });
 
-  const hasRef = formulas.some((f) => /\(instance|\(subclass|\(=>|\(<=>/.test(f));
+  const hasRef = hasTopLevelForm(formulas, ["instance", "subclass", "=>", "<=>"]);
   gates.push({
     id: "reference",
     label: "Reference check",
@@ -112,7 +128,7 @@ async function gates({ formulas = [], scenario }) {
       : "No scenario supplied.",
   });
 
-  const hasRule = formulas.some((f) => /\(=>|\(<=>/.test(f));
+  const hasRule = hasTopLevelForm(formulas, ["=>", "<=>"]);
   gates.push({
     id: "completeness",
     label: "Completeness check",

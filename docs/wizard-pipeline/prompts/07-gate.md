@@ -1,5 +1,13 @@
 # Phase Prompt — QUALITY GATE / human review
 
+**Implementation status (2026-09-10):** the shipped app implements a
+reduced 4-gate mechanical subset of this spec — syntax, reference,
+consistency, and completeness (`server/index.js`'s `runGates()`,
+duplicated in `src/app/services/sigma.ts`'s `runGatesLocal()`). It does
+not compute the ratio below, run the mechanical new-term-coverage
+diff-check, or carry a WordNet-mapping row or the full checklist. Don't
+assume parity between what's live and what this file specifies.
+
 **Function:** `gate(term, claims, tiers, patterns, proofs, validation) -> decision`
 
 You compute the readiness of a term and present it for the human's keep /
