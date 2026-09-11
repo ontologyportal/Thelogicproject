@@ -76,11 +76,13 @@ function buildEscalation(validator: string, payload: string, suggestions: string
       attributedPhase: "p2-sharpen",
       payload,
       // "Doesn't exist in SUMO" would overclaim: this quick local check only
-      // has Merge.kif resident (see sigma.ts's getSession), not the full
-      // corpus or any domain extension like Cyber.kif, so a real SUMO term
-      // from an extension ontology reads as undefined here even though it
-      // exists. Found 2026-09-10 running the wizard on CyberExploit, which
-      // extends Vulnerability/vulnerableSystem -- neither is in Merge.kif.
+      // has Merge.kif ingested by default (see sigma.ts's getSession -- a
+      // chosen default for load time, not a ceiling of the sigma-rs engine
+      // itself, which can ingest more), not the full corpus or any domain
+      // extension like Cyber.kif, so a real SUMO term from an extension
+      // ontology reads as undefined here even though it exists. Found
+      // 2026-09-10 running the wizard on CyberExploit, which extends
+      // Vulnerability/vulnerableSystem -- neither is in Merge.kif.
       question: `I reached for "${symbol}", which isn't in what this quick local check can see (it only has SUMO's core vocabulary loaded, not every domain extension). What's the closest everyday category for what you mean?${
         suggestions.length ? ` (Nearby: ${suggestions.join(", ")})` : ""
       }`,

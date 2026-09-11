@@ -1,6 +1,12 @@
 // In-browser SUMO validation + proving via the `sigmakee` wasm package.
 // Same engine as the server (server/sigma.js), so Phase 7 can run client-side
 // with no backend. The KB is loaded once per tab and held resident.
+//
+// Only Merge.kif is ingested below -- a chosen default for tab load time,
+// not a ceiling of the sigma-rs engine itself, which can ingest any
+// additional KIF source at runtime (see server/sigma.js's matching note).
+// Corrected 2026-09-10 after initially describing this as a hard technical
+// limit.
 
 import { init, Session, Source, Backend, Config } from "sigmakee/sdk";
 // @ts-ignore — Vite resolves the wasm to an asset URL (works in dev + build).
@@ -214,11 +220,12 @@ export async function runGatesLocal({ formulas = [], scenario }: GatesRequest): 
     const proved = r.status === "Proved";
     proof = { proved, szs: proved ? "Theorem" : r.status, wallMs, detail: `sigma-rs: ${proved ? "Theorem" : r.status}.` };
   }
-  // This engine only holds bare Merge.kif resident, not the full KB, so a
-  // not-proved result means "not verified against this partial KB," not
-  // "disproven." The sumo-contributions CI re-checks every submission
-  // against the real, full toolchain, so a local non-proof reads as
-  // advisory rather than a failure.
+  // This session only has Merge.kif ingested by default (see the note above
+  // getSession), not the full KB, so a not-proved result means "not
+  // verified against what's currently loaded," not "disproven." The
+  // sumo-contributions CI re-checks every submission against the real, full
+  // toolchain, so a local non-proof reads as advisory rather than a
+  // failure.
   const NOT_VERIFIED = "Not verified locally (partial knowledge base). This will be checked for real when you submit.";
   const proofStatus = !proof ? "skipped" : proof.proved ? "pass" : "unverified";
   gates.push({
