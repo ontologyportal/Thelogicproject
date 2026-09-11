@@ -1,6 +1,14 @@
 // In-process SUMO validation + proving via the `sigmakee` wasm package.
 // Replaces the sigma-vv shell-out: no Java, no Vampire binary, and the KB is
 // loaded once and held resident (no 30-40s per-request reload).
+//
+// This module only ingests Merge.kif below -- that's a chosen default for
+// startup time, not a ceiling of the sigma-rs engine itself. The engine can
+// ingest any additional KIF source at runtime (session.ingest() takes any
+// Source.url/Source.kif/Source.file); the package's own demo site's
+// "Knowledge base" tab exists specifically to add more SUMO files this way.
+// Corrected 2026-09-10 after initially describing this as a hard technical
+// limit (Jon: "wasm on sigma-rs has all of sumo loaded potentially").
 
 const { readFile } = require("node:fs/promises");
 const { createRequire } = require("node:module");
@@ -98,13 +106,14 @@ async function gates({ formulas = [], scenario }) {
     detail: hasRef ? "Statements reference existing ontology structure." : "No structural references found.",
   });
 
-  // This engine only holds bare Merge.kif resident, not the full KB
-  // (Cyber.kif, Mid-level-ontology.kif, etc.), so a not-proved result here
-  // means "not verified against this partial KB," not "disproven." The
-  // sumo-contributions CI re-checks every submission against the real, full
-  // toolchain, so a local non-proof should read as advisory, not a failure,
-  // or a legitimate contribution could look broken before it ever reaches
-  // the authoritative gate.
+  // This session only has Merge.kif ingested by default (see the note above
+  // getSession), not Cyber.kif, Mid-level-ontology.kif, or any other domain
+  // extension, so a not-proved result here means "not verified against
+  // what's currently loaded," not "disproven." The sumo-contributions CI
+  // re-checks every submission against the real, full toolchain, so a local
+  // non-proof should read as advisory, not a failure, or a legitimate
+  // contribution could look broken before it ever reaches the authoritative
+  // gate.
   let proof = null;
   if (scenario && scenario.query) proof = await prove(scenario);
   gates.push({

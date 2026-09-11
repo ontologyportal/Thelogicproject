@@ -93,7 +93,7 @@ crediting the real user in the commit message, PR title, and `meta.json`.
 | Backend `server/index.js` | Real. Zero-dependency Node HTTP server that shells the existing `tools/sigma-vv/*.sh` validators against SigmaKEE + Vampire. |
 | **GitHub sign-in** | **Real** OAuth (`api/auth/*.js`, Vercel serverless functions). Identity only — the wizard never requests repo access from the user. |
 | **Submit** | **Real.** Signed-in users get an actual PR opened on `sumo-contributions` (`api/submit.js`), whose own CI re-runs the same validators. Guests see the same success screen without a real PR (told to sign in). |
-| Rule-drafting (the actual KIF formulas) | **Real**, as of PR #7-9 (`api/draft.js`, `api/rules.js`). Deliberately scoped to one docString sentence and one formula per term — not a stub, but a reliability tradeoff for the in-browser WASM prover, which only holds bare `Merge.kif` resident (see `src/app/services/sigma.ts`), not `Cyber.kif` or any other domain extension. Verified live 2026-09-10 running the wizard on `CyberExploit`. |
+| Rule-drafting (the actual KIF formulas) | **Real**, as of PR #7-9 (`api/draft.js`, `api/rules.js`). Deliberately scoped to one docString sentence and one formula per term — not a stub, but a reliability tradeoff: `src/app/services/sigma.ts`'s `getSession()` only ingests `Merge.kif` by default (a chosen tradeoff for browser load time, not a ceiling of the sigma-rs engine itself, which can ingest any additional KIF source at runtime — see that file's own note), so local checks can't yet see `Cyber.kif` or other domain extensions. Verified live 2026-09-10 running the wizard on `CyberExploit`. |
 
 ## Run it locally
 
